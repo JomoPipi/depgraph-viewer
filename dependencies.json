@@ -1,0 +1,864 @@
+{
+  "BufferUtils/BufferUtils.ts": [
+    "BufferUtils/drawBuffer.ts",
+    "storage/buffer_storage.ts"
+  ],
+  "BufferUtils/delegate_events.ts": [
+    "BufferUtils/BufferUtils.ts",
+    "BufferUtils/recordTo.ts",
+    "BufferUtils/formulateBuffer.ts",
+    "storage/buffer_storage.ts",
+    "nunigraph/view/create_subdivselect.ts",
+    "webaudio2/internal.ts"
+  ],
+  "BufferUtils/desktopCapture.ts": [],
+  "BufferUtils/drawBuffer.ts": [
+    "BufferUtils/drawBufferFromWorker.ts"
+  ],
+  "BufferUtils/drawBufferFromWorker.ts": [],
+  "BufferUtils/export_buffer.ts": [],
+  "BufferUtils/formulateBuffer.ts": [
+    "BufferUtils/BufferUtils.ts",
+    "webaudio2/internal.ts",
+    "storage/buffer_storage.ts",
+    "UI_library/components/value_setters/selection_prompt.ts"
+  ],
+  "BufferUtils/internal.ts": [
+    "BufferUtils/drawBuffer.ts",
+    "BufferUtils/BufferUtils.ts",
+    "BufferUtils/recordTo.ts",
+    "BufferUtils/formulateBuffer.ts",
+    "BufferUtils/delegate_events.ts"
+  ],
+  "BufferUtils/recordTo.ts": [
+    "BufferUtils/BufferUtils.ts",
+    "webaudio2/internal.ts",
+    "storage/buffer_storage.ts",
+    "UI_library/internal.ts"
+  ],
+  "UI_library/components/confirmation_box.ts": [
+    "program/dispatcher.ts"
+  ],
+  "UI_library/components/draggable_window.ts": [
+    "UI_library/events/until_mouseup.ts",
+    "UI_library/functions/ui_clamp.ts",
+    "UI_library/components/resizability.ts"
+  ],
+  "UI_library/components/resizability.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/components/resizable_canvas.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/components/sendNotificationBox.ts": [
+    "program/dispatcher.ts"
+  ],
+  "UI_library/components/svg_icon.ts": [],
+  "UI_library/components/value_setters/createDiscreteContinuousDial.ts": [
+    "UI_library/components/value_setters/toggleSwitch.ts",
+    "UI_library/components/value_setters/discrete_dial.ts",
+    "UI_library/components/value_setters/number_input.ts",
+    "UI_library/types/DialMode.ts"
+  ],
+  "UI_library/components/value_setters/createNumberSliderComponent.ts": [],
+  "UI_library/components/value_setters/discrete_dial.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/components/value_setters/dragline.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/components/value_setters/itemSelectComponent.ts": [],
+  "UI_library/components/value_setters/jsdials.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/components/value_setters/number_dial.ts": [
+    "UI_library/components/value_setters/jsdials.ts"
+  ],
+  "UI_library/components/value_setters/number_input.ts": [
+    "UI_library/events/until_mouseup.ts",
+    "UI_library/components/value_setters/jsdials.ts"
+  ],
+  "UI_library/components/value_setters/radio_group.ts": [
+    "UI_library/components/svg_icon.ts"
+  ],
+  "UI_library/components/value_setters/sample_select.ts": [
+    "BufferUtils/internal.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts"
+  ],
+  "UI_library/components/value_setters/selection_prompt.ts": [],
+  "UI_library/components/value_setters/toggleSwitch.ts": [],
+  "UI_library/components/value_setters/toggle_button.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts"
+  ],
+  "UI_library/components/value_setters/versatile_numberdial.ts": [
+    "UI_library/components/value_setters/toggleSwitch.ts",
+    "UI_library/components/value_setters/discrete_dial.ts",
+    "UI_library/components/value_setters/number_input.ts",
+    "UI_library/types/DialMode.ts"
+  ],
+  "UI_library/components/value_setters/xypad.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "UI_library/events/page_groupify.ts": [],
+  "UI_library/events/until_mouseup.ts": [],
+  "UI_library/functions/colorContrast.ts": [],
+  "UI_library/functions/createDelayDebouncedFunction.ts": [],
+  "UI_library/functions/rgbcolormix.ts": [],
+  "UI_library/functions/setValue.ts": [
+    "program/CommandType.ts",
+    "program/dispatcher.ts"
+  ],
+  "UI_library/functions/ui_clamp.ts": [],
+  "UI_library/internal.ts": [
+    "UI_library/components/draggable_window.ts",
+    "UI_library/components/value_setters/jsdials.ts",
+    "UI_library/components/value_setters/number_dial.ts",
+    "UI_library/components/value_setters/number_input.ts",
+    "UI_library/events/page_groupify.ts",
+    "UI_library/components/value_setters/radio_group.ts",
+    "UI_library/components/value_setters/toggle_button.ts",
+    "UI_library/components/resizable_canvas.ts",
+    "UI_library/functions/colorContrast.ts",
+    "UI_library/functions/ui_clamp.ts"
+  ],
+  "UI_library/types/DialMode.ts": [],
+  "UI_setup/click_nav_menu.ts": [
+    "UI_setup/theme_setup.ts",
+    "UI_library/internal.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts",
+    "nunigraph/controller/GraphController.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "program/dispatcher.ts",
+    "program/CommandType.ts",
+    "share_project/shareProjectViaURL.ts"
+  ],
+  "UI_setup/internal.ts": [
+    "UI_setup/theme_setup.ts",
+    "UI_setup/resize.ts",
+    "UI_setup/click_nav_menu.ts",
+    "UI_setup/setup_pages.ts"
+  ],
+  "UI_setup/resize.ts": [
+    "nunigraph/controller/GraphController.ts"
+  ],
+  "UI_setup/setup_pages.ts": [
+    "program/dispatcher.ts",
+    "UI_library/events/page_groupify.ts"
+  ],
+  "UI_setup/theme_setup.ts": [
+    "UI_library/functions/rgbcolormix.ts"
+  ],
+  "UI_setup/traffic_lights.ts": [],
+  "helpers/helpers.ts": [],
+  "helpers/type_helpers.ts": [],
+  "main.ts": [
+    "UI_setup/internal.ts",
+    "scale_utils/internal.ts",
+    "BufferUtils/internal.ts",
+    "storage/save_project.ts",
+    "nunigraph/init.ts",
+    "nunigraph/graphTests/combinatorialExplosionTest.ts"
+  ],
+  "nunigraph/controller/EventHandling/getControllerFromEventTarget.ts": [
+    "program/dispatcher.ts",
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/EventHandling/getGraphMouseTarget.ts": [
+    "nunigraph/view/hover/Hover.ts",
+    "nunigraph/view/hover/HoverResponse.ts",
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/EventHandling/handleEvents.ts": [
+    "nunigraph/view/hover/HoverResponse.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "nunigraph/view/hover/Hover.ts",
+    "nunigraph/controller/functions/getDestinationFromPortId.ts",
+    "nunigraph/controller/functions/getNodesInBox.ts",
+    "nunigraph/controller/MouseTracker.ts",
+    "nunigraph/controller/EventHandling/getControllerFromEventTarget.ts",
+    "nunigraph/controller/EventHandling/getGraphMouseTarget.ts",
+    "program/commands/ExecuteCommandCommand.ts",
+    "nunigraph/controller/functions/determinePortsToConnect.ts",
+    "nunigraph/controller/graphOperations/getConnectPortsCommands.ts",
+    "nunigraph/controller/graphOperations/getInsertNodeCommands.ts",
+    "nunigraph/controller/graphOperations/getMoveNodesCommands.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/graphOperations/getMoveMapPositionCommand.ts",
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "nunigraph/controller/graphOperations/getMapTransformCommand.ts"
+  ],
+  "nunigraph/controller/GraphController.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "webaudio2/internal.ts",
+    "nunigraph/model/defaultNodeSettings.ts",
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/MouseTracker.ts": [
+    "nunigraph/view/hover/Hover.ts",
+    "nunigraph/view/hover/HoverResponse.ts",
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/NuniGraphController.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/model/nunigraph.ts",
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "nunigraph/view/NuniGraphRenderer/NuniGraphRenderer.ts",
+    "nunigraph/controller/clipboard.ts",
+    "UI_library/internal.ts",
+    "UI_library/components/svg_icon.ts",
+    "nunigraph/controller/contextmenus/spawnGraphContextmenu.ts",
+    "nunigraph/controller/functions/serializeNode.ts",
+    "nunigraph/controller/graphOperations/getReproduceSubgraphCommands.ts",
+    "nunigraph/model/defaultNodeSettings.ts",
+    "program/dispatcher.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts",
+    "nunigraph/controller/graphOperations/getDeleteNodesCommands.ts",
+    "nunigraph/controller/graphOperations/getCallControllerFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/getPasteNodesCommands.ts"
+  ],
+  "nunigraph/controller/clipboard.ts": [
+    "nunigraph/model/nunigraph.ts"
+  ],
+  "nunigraph/controller/contextmenus/graphEditionContextmenu.ts": [
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/contextmenus/nodeCreationContextmenu.ts": [
+    "UI_library/components/confirmation_box.ts",
+    "UI_library/components/svg_icon.ts",
+    "nunigraph/controller/GraphController.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/nativemodules.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "program/dispatcher.ts",
+    "program/CommandType.ts"
+  ],
+  "nunigraph/controller/contextmenus/spawnGraphContextmenu.ts": [
+    "program/dispatcher.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/contextmenus/graphEditionContextmenu.ts",
+    "nunigraph/controller/contextmenus/nodeCreationContextmenu.ts"
+  ],
+  "nunigraph/controller/functions/determinePortsToConnect.ts": [
+    "nunigraph/view/hover/Hover.ts",
+    "nunigraph/view/hover/HoverResponse.ts",
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/functions/getAdjacentEdges.ts": [
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/functions/mergeArrayValues.ts",
+    "program/commands/ModifyGraphCommand.ts",
+    "nunigraph/controller/functions/getConnectionsToPort.ts"
+  ],
+  "nunigraph/controller/functions/getConnectionsToPort.ts": [
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts"
+  ],
+  "nunigraph/controller/functions/getController.ts": [
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/GraphController.ts",
+    "nunigraph/model/NuniGraphNode.ts"
+  ],
+  "nunigraph/controller/functions/getDestinationFromPortId.ts": [],
+  "nunigraph/controller/functions/getNodesInBox.ts": [
+    "nunigraph/controller/NuniGraphController.ts"
+  ],
+  "nunigraph/controller/functions/mergeArrayValues.ts": [
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts"
+  ],
+  "nunigraph/controller/functions/serializeNode.ts": [
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/model/NuniGraphNode.ts"
+  ],
+  "nunigraph/controller/graphOperations/expandControllerPath.ts": [],
+  "nunigraph/controller/graphOperations/expandNodePath.ts": [],
+  "nunigraph/controller/graphOperations/getCallControllerFunctionCommand.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/expandControllerPath.ts"
+  ],
+  "nunigraph/controller/graphOperations/getCallFunctionCommand.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts"
+  ],
+  "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "nunigraph/controller/graphOperations/expandNodePath.ts",
+    "nunigraph/controller/graphOperations/getCallFunctionCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getConnectPortsCommands.ts": [
+    "program/commandMap.ts",
+    "program/CommandType.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/functions/getDestinationFromPortId.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/graphOperations/getCreatePortCommands.ts"
+  ],
+  "nunigraph/controller/graphOperations/getCreatePortCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getDeleteNodesCommands.ts": [
+    "program/CommandType.ts",
+    "nunigraph/controller/functions/mergeArrayValues.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/functions/serializeNode.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "program/commands/types/ExecuteCommandCommandParameters.ts"
+  ],
+  "nunigraph/controller/graphOperations/getDisconnectPortCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/functions/getAdjacentEdges.ts",
+    "nunigraph/controller/functions/getController.ts"
+  ],
+  "nunigraph/controller/graphOperations/getInsertNodeCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/functions/getDestinationFromPortId.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/graphOperations/getCreatePortCommands.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts"
+  ],
+  "nunigraph/controller/graphOperations/getMapTransformCommand.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/expandControllerPath.ts",
+    "nunigraph/controller/graphOperations/getCallControllerFunctionCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getModularizationCommands.ts": [
+    "program/CommandType.ts",
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/functions/serializeNode.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/functions/mergeArrayValues.ts",
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "nunigraph/controller/GraphController.ts"
+  ],
+  "nunigraph/controller/graphOperations/getMoveMapPositionCommand.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/expandControllerPath.ts",
+    "nunigraph/controller/graphOperations/getCallControllerFunctionCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getMoveNodesCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts": [
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts"
+  ],
+  "nunigraph/controller/graphOperations/getPasteNodesCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/clipboard.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts"
+  ],
+  "nunigraph/controller/graphOperations/getReproduceSubgraphCommands.ts": [
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/controller/functions/serializeNode.ts",
+    "nunigraph/controller/GraphController.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts"
+  ],
+  "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts": [
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/expandNodePath.ts"
+  ],
+  "nunigraph/controller/nativemodules.ts": [],
+  "nunigraph/graphTests/combinatorialExplosionTest.ts": [
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "nunigraph/controller/functions/getDestinationFromPortId.ts",
+    "nunigraph/controller/GraphController.ts",
+    "nunigraph/controller/graphOperations/getConnectPortsCommands.ts",
+    "nunigraph/controller/graphOperations/getDeleteNodesCommands.ts",
+    "nunigraph/controller/graphOperations/getInsertNodeCommands.ts",
+    "nunigraph/controller/graphOperations/getModularizationCommands.ts",
+    "nunigraph/controller/graphOperations/getPasteNodesCommands.ts",
+    "nunigraph/controller/graphOperations/getReproduceSubgraphCommands.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/view/NuniGraphRenderer/NuniGraphRenderer.ts"
+  ],
+  "nunigraph/init.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "BufferUtils/internal.ts",
+    "webaudio2/internal.ts",
+    "waveform_utils/mutable_waveform.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/GraphController.ts",
+    "program/dispatcher.ts",
+    "nunigraph/controller/EventHandling/handleEvents.ts",
+    "nunigraph/controller/nativemodules.ts",
+    "webaudio2/audiocontext2.ts",
+    "share_project/loadProjectFromURL.ts"
+  ],
+  "nunigraph/model/NuniGraphNode.ts": [
+    "webaudio2/internal.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/view/snapToGridElement.ts",
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/model/SpecializedLists.ts"
+  ],
+  "nunigraph/model/SpecializedLists.ts": [
+    "webaudio2/audiocontext2.ts",
+    "webaudio2/internal.ts",
+    "nunigraph/model/NuniGraphNode.ts"
+  ],
+  "nunigraph/model/defaultNodeSettings.ts": [],
+  "nunigraph/model/nodeconfig.ts": [],
+  "nunigraph/model/nunigraph.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "webaudio2/internal.ts",
+    "nunigraph/model/SpecializedLists.ts",
+    "nunigraph/model/defaultNodeSettings.ts",
+    "nunigraph/controller/functions/serializeNode.ts",
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/controller/functions/getDestinationFromPortId.ts"
+  ],
+  "nunigraph/model/testGraphs.ts": [],
+  "nunigraph/view/NuniGraphRenderer/CanvasRenderer.ts": [],
+  "nunigraph/view/NuniGraphRenderer/CanvasRenderer2.ts": [],
+  "nunigraph/view/NuniGraphRenderer/NuniGraphRenderer.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/view/NuniGraphRenderer/computeTriangleFromEdge.ts",
+    "nunigraph/view/NuniGraphRenderer/CanvasRenderer2.ts",
+    "nunigraph/view/hover/HoverResponse.ts"
+  ],
+  "nunigraph/view/NuniGraphRenderer/computeTriangleFromEdge.ts": [],
+  "nunigraph/view/NuniGraphRenderer/pointInsideTrigon.ts": [],
+  "nunigraph/view/create_subdivselect.ts": [
+    "UI_library/components/value_setters/versatile_numberdial.ts",
+    "UI_library/components/value_setters/createDiscreteContinuousDial.ts",
+    "program/dispatcher.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "UI_library/types/DialMode.ts"
+  ],
+  "nunigraph/view/hover/Hover.ts": [],
+  "nunigraph/view/hover/HoverResponse.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "nunigraph/view/NuniGraphRenderer/NuniGraphRenderer.ts",
+    "nunigraph/view/hover/Hover.ts"
+  ],
+  "nunigraph/view/snapToGridElement.ts": [],
+  "program/Command.ts": [],
+  "program/CommandType.ts": [],
+  "program/commandMap.ts": [
+    "program/Command.ts",
+    "program/CommandType.ts",
+    "program/commands/ExecuteCommandCommand.ts",
+    "program/commands/ModifyGraphCommand.ts",
+    "program/commands/SetValueCommand.ts",
+    "program/commands/CallFunctionCommand.ts"
+  ],
+  "program/commands/CallFunctionCommand.ts": [
+    "program/Command.ts",
+    "program/dispatcher.ts"
+  ],
+  "program/commands/ExecuteCommandCommand.ts": [
+    "program/Command.ts",
+    "program/commandMap.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts"
+  ],
+  "program/commands/ModifyGraphCommand.ts": [
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/model/nunigraph.ts",
+    "program/Command.ts",
+    "nunigraph/controller/functions/getController.ts",
+    "nunigraph/controller/functions/getAdjacentEdges.ts"
+  ],
+  "program/commands/SetValueCommand.ts": [
+    "program/Command.ts",
+    "program/dispatcher.ts"
+  ],
+  "program/commands/types/ExecuteCommandCommandParameters.ts": [
+    "program/commandMap.ts",
+    "program/CommandType.ts"
+  ],
+  "program/dispatcher.ts": [
+    "nunigraph/controller/NuniGraphController.ts",
+    "program/Command.ts",
+    "program/commandMap.ts",
+    "program/commands/ExecuteCommandCommand.ts",
+    "program/commands/types/ExecuteCommandCommandParameters.ts",
+    "program/CommandType.ts"
+  ],
+  "scale_utils/create_scale_UI.ts": [
+    "scale_utils/formulas/csv_list.ts",
+    "scale_utils/formulas/equal.ts",
+    "scale_utils/formulas/deltas.ts",
+    "scale_utils/presets.ts"
+  ],
+  "scale_utils/formulas/csv_list.ts": [
+    "webaudio2/internal.ts",
+    "scale_utils/preview_scale.ts"
+  ],
+  "scale_utils/formulas/deltas.ts": [
+    "webaudio2/internal.ts",
+    "scale_utils/preview_scale.ts"
+  ],
+  "scale_utils/formulas/equal.ts": [
+    "webaudio2/internal.ts",
+    "scale_utils/preview_scale.ts"
+  ],
+  "scale_utils/internal.ts": [
+    "scale_utils/create_scale_UI.ts"
+  ],
+  "scale_utils/presets.ts": [],
+  "scale_utils/preview_scale.ts": [
+    "webaudio2/internal.ts"
+  ],
+  "share_project/loadProjectFromURL.ts": [
+    "program/dispatcher.ts",
+    "webaudio2/internal.ts"
+  ],
+  "share_project/shareProjectViaURL.ts": [
+    "program/dispatcher.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "webaudio2/internal.ts"
+  ],
+  "storage/buffer_storage.ts": [
+    "webaudio2/internal.ts"
+  ],
+  "storage/dialog.ts": [],
+  "storage/module_storage.ts": [],
+  "storage/save_project.ts": [
+    "nunigraph/controller/GraphController.ts",
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/sequencers/MasterClock.ts"
+  ],
+  "storage/user_options.ts": [],
+  "visualizer/global_visualizer.ts": [
+    "visualizer/visualizer.ts"
+  ],
+  "visualizer/visualizer.ts": [
+    "UI_library/internal.ts"
+  ],
+  "visualizer/visualizer_worker.ts": [],
+  "waveform_utils/mutable_waveform.ts": [
+    "UI_library/components/value_setters/xypad.ts"
+  ],
+  "webaudio2/BaseAudioNode.ts": [
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/NodeContext.ts": [
+    "nunigraph/model/NuniGraphNode.ts",
+    "webaudio2/audiocontext2.ts"
+  ],
+  "webaudio2/adsr/adsr.ts": [],
+  "webaudio2/adsr/adsr_editor.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "UI_library/internal.ts",
+    "webaudio2/adsr/adsr.ts"
+  ],
+  "webaudio2/adsr/types.ts": [],
+  "webaudio2/appearance/getNodeColorGradient.ts": [],
+  "webaudio2/assignDefaultPorts.ts": [],
+  "webaudio2/audiocontext2.ts": [
+    "visualizer/global_visualizer.ts",
+    "webaudio2/nodes/sample/NuniSampleNode.ts",
+    "webaudio2/nodes/oscillator/oscillator.ts",
+    "webaudio2/nodes/gate_sequencer/subgraph_sequencer.ts",
+    "webaudio2/nodes/sample_sequencer/sample_sequencer.ts",
+    "webaudio2/nodes/record/NuniRecordingNode.ts",
+    "webaudio2/nodes/module/module.ts",
+    "webaudio2/nodes/pianoroll/mono_pianoroll.ts",
+    "webaudio2/nodes/samplepianoroll/samplepianoroll.ts",
+    "webaudio2/nodes/processor/processor.ts",
+    "webaudio2/nodes/automation/automation.ts",
+    "webaudio2/nodes/filter/filter.ts",
+    "webaudio2/nodes/keyboard_gate.ts/kb_gate.ts",
+    "webaudio2/portAugmented.ts",
+    "webaudio2/nodes/OutputNode/OutputNode.ts",
+    "webaudio2/nodes/InputNode/InputNode.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "webaudio2/nodes/midi_output/MIDIOutputNode.ts",
+    "webaudio2/nodes/visualizer/VisualizerNode.ts"
+  ],
+  "webaudio2/constants.ts": [],
+  "webaudio2/getCommonController.ts": [
+    "nunigraph/view/create_subdivselect.ts",
+    "UI_library/components/value_setters/createNumberSliderComponent.ts",
+    "UI_library/internal.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "webaudio2/internal.ts",
+    "program/dispatcher.ts",
+    "webaudio2/audiocontext2.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "UI_library/components/value_setters/itemSelectComponent.ts"
+  ],
+  "webaudio2/internal.ts": [
+    "webaudio2/audiocontext2.ts",
+    "webaudio2/nodes/OutputNode/OutputNode.ts",
+    "webaudio2/nodes/sample/NuniSampleNode.ts",
+    "webaudio2/nodes/oscillator/oscillator.ts",
+    "webaudio2/nodes/gate_sequencer/subgraph_sequencer.ts",
+    "webaudio2/nodes/sample_sequencer/sample_sequencer.ts",
+    "visualizer/global_visualizer.ts",
+    "webaudio2/nodes/record/NuniRecordingNode.ts",
+    "webaudio2/nodes/module/module.ts",
+    "webaudio2/note_in/keyboard.ts",
+    "webaudio2/sequencers/linear_sequencers/sequencer.ts",
+    "webaudio2/sequencers/MasterClock.ts",
+    "webaudio2/note_in/nuni_source_node.ts",
+    "webaudio2/nodes/pianoroll/mono_pianoroll.ts",
+    "webaudio2/nodes/automation/automation.ts",
+    "webaudio2/nodes/filter/filter.ts"
+  ],
+  "webaudio2/nodes/InputNode/InputNode.ts": [
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/OutputNode/OutputNode.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "UI_library/internal.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/automation/automation.ts": [
+    "nunigraph/view/create_subdivselect.ts",
+    "webaudio2/nodes/automation/automation_editor.ts",
+    "UI_library/internal.ts",
+    "webaudio2/volumenode_container.ts",
+    "webaudio2/sequencers/MasterClock.ts",
+    "UI_library/components/value_setters/dragline.ts",
+    "UI_library/components/value_setters/discrete_dial.ts",
+    "webaudio2/NodeContext.ts",
+    "UI_library/types/DialMode.ts"
+  ],
+  "webaudio2/nodes/automation/automation_editor.ts": [
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "webaudio2/nodes/filter/filter.ts": [
+    "webaudio2/portAugmented.ts"
+  ],
+  "webaudio2/nodes/gate_sequencer/subgraph_sequencer.ts": [
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/sequencers/linear_sequencers/sequencer.ts"
+  ],
+  "webaudio2/nodes/keyboard_gate.ts/_kbcomponent.ts": [],
+  "webaudio2/nodes/keyboard_gate.ts/kb_gate.ts": [
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/constants.ts",
+    "webaudio2/NodeContext.ts",
+    "webaudio2/volumenode_container.ts",
+    "webaudio2/nodes/keyboard_gate.ts/kbcontroller.ts"
+  ],
+  "webaudio2/nodes/keyboard_gate.ts/kbcontroller.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "UI_library/internal.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "webaudio2/constants.ts",
+    "webaudio2/internal.ts",
+    "webaudio2/nodes/keyboard_gate.ts/kbmacrowindow.ts"
+  ],
+  "webaudio2/nodes/keyboard_gate.ts/kbmacrowindow.ts": [
+    "webaudio2/adsr/adsr_editor.ts"
+  ],
+  "webaudio2/nodes/midi_output/MIDIOutputNode.ts": [
+    "nunigraph/controller/graphOperations/expandNodePath.ts",
+    "nunigraph/controller/graphOperations/getDisconnectPortCommands.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts",
+    "program/commands/ExecuteCommandCommand.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/module/module.ts": [
+    "nunigraph/controller/NuniGraphController.ts",
+    "nunigraph/model/nunigraph.ts",
+    "nunigraph/model/NuniGraphNode.ts",
+    "program/dispatcher.ts",
+    "UI_library/components/value_setters/selection_prompt.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/number/number.ts": [],
+  "webaudio2/nodes/oscillator/oscillator.ts": [
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "webaudio2/appearance/getNodeColorGradient.ts",
+    "webaudio2/getCommonController.ts",
+    "webaudio2/NodeContext.ts",
+    "webaudio2/note_in/nuni_source_node.ts"
+  ],
+  "webaudio2/nodes/pianoroll/mono_pianoroll.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "nunigraph/view/create_subdivselect.ts",
+    "program/dispatcher.ts",
+    "UI_library/internal.ts",
+    "UI_library/types/DialMode.ts",
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts",
+    "webaudio2/nodes/pianoroll/pianoroll_editor.ts"
+  ],
+  "webaudio2/nodes/pianoroll/pianoroll_editor.ts": [
+    "webaudio2/sequencers/MasterClock.ts",
+    "webaudio2/constants.ts",
+    "program/dispatcher.ts",
+    "nunigraph/controller/graphOperations/getCallFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/expandNodePath.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/processor/bypass-processor.ts": [],
+  "webaudio2/nodes/processor/coolbeat1.ts": [],
+  "webaudio2/nodes/processor/processor.ts": [
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "UI_library/components/sendNotificationBox.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/processor/processorExamples/adsr2.ts": [],
+  "webaudio2/nodes/processor/processorExamples/clockdivider.ts": [],
+  "webaudio2/nodes/processor/processorExamples/multiply.ts": [],
+  "webaudio2/nodes/processor/processorExamples/pattern.ts": [],
+  "webaudio2/nodes/processor/processorExamples/simpleADSR.ts": [],
+  "webaudio2/nodes/record/NuniRecordingNode.ts": [
+    "BufferUtils/BufferUtils.ts",
+    "storage/buffer_storage.ts",
+    "webaudio2/NodeContext.ts",
+    "webaudio2/nodes/record/audioCaptureNodeControls.ts"
+  ],
+  "webaudio2/nodes/record/audioCaptureNodeControls.ts": [
+    "webaudio2/internal.ts",
+    "UI_library/components/value_setters/sample_select.ts"
+  ],
+  "webaudio2/nodes/sample/NuniSampleNode.ts": [
+    "webaudio2/note_in/nuni_source_node.ts",
+    "storage/buffer_storage.ts",
+    "webaudio2/nodes/sample/sample_canvas2.ts",
+    "BufferUtils/internal.ts",
+    "UI_library/internal.ts",
+    "webaudio2/getCommonController.ts",
+    "webaudio2/NodeContext.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "program/dispatcher.ts",
+    "program/CommandType.ts",
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "webaudio2/appearance/getNodeColorGradient.ts"
+  ],
+  "webaudio2/nodes/sample/sample_canvas2.ts": [
+    "BufferUtils/internal.ts",
+    "UI_library/events/until_mouseup.ts"
+  ],
+  "webaudio2/nodes/sample_sequencer/sample_sequencer.ts": [
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/sequencers/linear_sequencers/sequencer.ts",
+    "storage/buffer_storage.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/nodes/samplepianoroll/samplepianoroll.ts": [
+    "nunigraph/controller/graphOperations/getCallFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "nunigraph/view/create_subdivselect.ts",
+    "program/dispatcher.ts",
+    "storage/buffer_storage.ts",
+    "UI_library/components/value_setters/sample_select.ts",
+    "UI_library/internal.ts",
+    "UI_library/types/DialMode.ts",
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "webaudio2/NodeContext.ts",
+    "webaudio2/volumenode_container.ts",
+    "webaudio2/nodes/pianoroll/pianoroll_editor.ts"
+  ],
+  "webaudio2/nodes/visualizer/VisualizerNode.ts": [
+    "webaudio2/NodeContext.ts",
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/getDisconnectPortCommands.ts",
+    "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "UI_library/internal.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/nodes/visualizer/visualizerPresetScripts.ts",
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "UI_library/components/sendNotificationBox.ts"
+  ],
+  "webaudio2/nodes/visualizer/visualizerPresetScripts.ts": [],
+  "webaudio2/note_in/keyboard.ts": [],
+  "webaudio2/note_in/nuni_source_node.ts": [
+    "webaudio2/adsr/adsr.ts",
+    "webaudio2/note_in/keyboard.ts",
+    "webaudio2/volumenode_container.ts",
+    "webaudio2/NodeContext.ts"
+  ],
+  "webaudio2/portAugmented.ts": [
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "webaudio2/appearance/getNodeColorGradient.ts",
+    "webaudio2/assignDefaultPorts.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/getCommonController.ts"
+  ],
+  "webaudio2/sequencers/MasterClock.ts": [
+    "program/commands/CallFunctionCommand.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "UI_library/functions/createDelayDebouncedFunction.ts",
+    "UI_library/internal.ts"
+  ],
+  "webaudio2/sequencers/linear_sequencers/sequencer.ts": [
+    "webaudio2/sequencers/MasterClock.ts",
+    "UI_library/internal.ts",
+    "webaudio2/sequencers/linear_sequencers/sequencer_controls.ts",
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts",
+    "UI_library/types/DialMode.ts",
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts",
+    "nunigraph/controller/graphOperations/getDisconnectPortCommands.ts",
+    "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts",
+    "program/CommandType.ts",
+    "program/dispatcher.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts",
+    "webaudio2/internal.ts",
+    "UI_library/components/value_setters/sample_select.ts"
+  ],
+  "webaudio2/sequencers/linear_sequencers/sequencer_controls.ts": [
+    "webaudio2/internal.ts",
+    "nunigraph/view/create_subdivselect.ts",
+    "webaudio2/adsr/adsr_editor.ts",
+    "UI_library/components/value_setters/createNumberSliderComponent.ts",
+    "UI_library/components/value_setters/dragline.ts",
+    "program/dispatcher.ts",
+    "program/CommandType.ts",
+    "nunigraph/controller/graphOperations/getCallNodeFunctionCommand.ts",
+    "UI_library/internal.ts",
+    "nunigraph/controller/graphOperations/getSetNodeValueCommand.ts",
+    "program/commands/ExecuteCommandCommand.ts",
+    "nunigraph/controller/graphOperations/getNodeMethodCallCommand.ts"
+  ],
+  "webaudio2/types.ts": [],
+  "webaudio2/volumenode_container.ts": [
+    "webaudio2/BaseAudioNode.ts",
+    "webaudio2/NodeContext.ts"
+  ]
+}
