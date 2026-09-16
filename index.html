@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dependency Graph Viewer</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --panel: #171a23;
+        --border: #2a2e3a;
+        --text: #e6e8ef;
+        --muted: #8b90a3;
+        --folder: #4c7fd6;
+        --folder-expanded: #3a3f52;
+        --file: #52b788;
+        --edge: #565c73;
+        --edge-label-bg: #0f1117;
+        --accent: #f2b134;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        overflow: hidden;
+      }
+      #app {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+      }
+      svg.panning {
+        cursor: grabbing;
+      }
+
+      #hud {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 10;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        max-width: 340px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--muted);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      }
+      #hud h1 {
+        font-size: 13px;
+        margin: 0 0 6px 0;
+        color: var(--text);
+        font-weight: 600;
+      }
+      #hud .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      #hud button {
+        background: var(--folder-expanded);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      #hud button:hover {
+        background: var(--border);
+      }
+      .hud-control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 8px;
+        cursor: pointer;
+      }
+      .hud-control-row input[type="checkbox"] {
+        cursor: pointer;
+      }
+
+      .triple-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .triple-toggle-track {
+        position: relative;
+        width: 46px;
+        height: 18px;
+        background: var(--border);
+        border-radius: 9px;
+        flex-shrink: 0;
+      }
+      .triple-toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--muted);
+        transition:
+          left 0.15s ease,
+          background 0.15s ease;
+      }
+      .triple-toggle[data-state="dim"] .triple-toggle-thumb {
+        left: 16px;
+        background: var(--accent);
+      }
+      .triple-toggle[data-state="hide"] .triple-toggle-thumb {
+        left: 30px;
+        background: #e07a7a;
+      }
+      .triple-toggle-label {
+        font-size: 11px;
+        color: var(--muted);
+        min-width: 24px;
+      }
+
+      #breadcrumb {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 11px;
+        color: var(--muted);
+        max-width: 320px;
+        text-align: right;
+      }
+
+      .node-group {
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+      .node-circle {
+        stroke: rgba(0, 0, 0, 0.35);
+        stroke-width: 1px;
+      }
+      .node-group:hover .node-circle {
+        filter: brightness(1.25);
+      }
+      .node-label {
+        fill: var(--text);
+        font-size: 11px;
+        font-weight: 500;
+        pointer-events: none;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      }
+      .node-sublabel {
+        fill: var(--muted);
+        font-size: 9px;
+        pointer-events: none;
+      }
+
+      .cluster-box {
+        fill: rgba(255, 255, 255, 0.02);
+        stroke: var(--border);
+        stroke-width: 1.5px;
+        stroke-dasharray: 4 3;
+        stroke-linejoin: round;
+        cursor: pointer;
+      }
+      .cluster-box:hover {
+        fill: rgba(255, 255, 255, 0.05);
+        stroke: var(--accent);
+      }
+      .cluster-label {
+        fill: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        pointer-events: none;
+      }
+      .edge-path {
+        fill: none;
+        stroke-opacity: 0.55;
+        transition: opacity 0.15s ease;
+      }
+      .edge-label-bg {
+        fill: var(--edge-label-bg);
+        opacity: 0.85;
+      }
+      .edge-label {
+        fill: var(--muted);
+        font-size: 10px;
+        pointer-events: none;
+      }
+
+      #loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      #error {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #e07a7a;
+        font-size: 13px;
+        text-align: center;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="loading">Loading dependency graph…</div>
+      <div id="error"></div>
+      <svg id="canvas"></svg>
+      <div id="hud" style="display: none">
+        <h1>Dependency Graph</h1>
+        <div class="row">
+          <span>Visible nodes</span><span id="stat-nodes">0</span>
+        </div>
+        <div class="row">
+          <span>Visible edges</span><span id="stat-edges">0</span>
+        </div>
+        <div style="margin-top: 6px; color: var(--muted)">
+          Click a <span style="color: var(--folder)">folder</span> to expand it.
+          Click a dashed cluster box (or its label) to collapse it back.
+          Dashed arrows are type-only imports.
+        </div>
+
+        <label class="hud-control-row" for="physics-toggle">
+          <span>Physics while dragging</span>
+          <input type="checkbox" id="physics-toggle" checked />
+        </label>
+
+        <label class="hud-control-row" for="hide-type-toggle">
+          <span>Hide type-only imports</span>
+          <input type="checkbox" id="hide-type-toggle" />
+        </label>
+
+        <div class="hud-control-row" id="scc-row">
+          <span>Cycles only (SCC &gt; 1)</span>
+          <div
+            id="scc-toggle"
+            class="triple-toggle"
+            data-state="off"
+            title="Click to cycle: Off → Dim → Hide"
+          >
+            <div class="triple-toggle-track">
+              <div class="triple-toggle-thumb"></div>
+            </div>
+            <span class="triple-toggle-label">Off</span>
+          </div>
+        </div>
+
+        <button id="reset-btn">Collapse all</button>
+      </div>
+      <div id="breadcrumb" style="display: none"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        // ---------------------------------------------------------------
+        // 1. Load data & build a folder/file tree from flat path -> [deps]
+        // ---------------------------------------------------------------
+
+        const loadingEl = document.getElementById("loading");
+        const errorEl = document.getElementById("error");
+        const hudEl = document.getElementById("hud");
+        const breadcrumbEl = document.getElementById("breadcrumb");
+
+        fetch("./dependencies.json", { cache: "no-store" })
+          .then((res) => {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.json();
+          })
+          .then((data) => {
+            loadingEl.style.display = "none";
+            hudEl.style.display = "block";
+            breadcrumbEl.style.display = "block";
+            init(normalizeFileMap(data));
+          })
+          .catch((err) => {
+            loadingEl.style.display = "none";
+            errorEl.style.display = "flex";
+            errorEl.textContent =
+              "Failed to load dependencies.json: " +
+              err.message +
+              " (serve this directory over HTTP, e.g. `npm run visualize`)";
+          });
+
+        // Accepts either the current { value: [...], types: [...] } shape
+        // per file, or the older flat string[] shape (treated as all-value),
+        // so an old dependencies.json still loads without a type-only split.
+        function normalizeFileMap(data) {
+          const normalized = {};
+          for (const [file, deps] of Object.entries(data)) {
+            if (Array.isArray(deps)) {
+              normalized[file] = { value: deps, types: [] };
+            } else {
+              normalized[file] = {
+                value: deps.value || [],
+                types: deps.types || [],
+              };
+            }
+          }
+          return normalized;
+        }
+
+        function buildTree(fileMap) {
+          const root = {
+            id: "",
+            name: "(root)",
+            path: "",
+            isFile: false,
+            children: new Map(),
+            parent: null,
+          };
+
+          function ensureFolder(parent, name, path) {
+            if (!parent.children.has(name)) {
+              parent.children.set(name, {
+                id: path,
+                name,
+                path,
+                isFile: false,
+                children: new Map(),
+                parent,
+              });
+            }
+            return parent.children.get(name);
+          }
+
+          for (const filePath of Object.keys(fileMap)) {
+            const parts = filePath.split("/");
+            let cursor = root;
+            for (let i = 0; i < parts.length - 1; i++) {
+              const path = parts.slice(0, i + 1).join("/");
+              cursor = ensureFolder(cursor, parts[i], path);
+            }
+            const fileName = parts[parts.length - 1];
+            cursor.children.set(fileName, {
+              id: filePath,
+              name: fileName,
+              path: filePath,
+              isFile: true,
+              children: new Map(),
+              parent: cursor,
+              deps: fileMap[filePath],
+            });
+          }
+          return root;
+        }
+
+        // Map every leaf file path -> its tree node, for quick edge resolution.
+        function indexLeaves(root) {
+          const map = new Map();
+          (function walk(node) {
+            if (node.isFile) {
+              map.set(node.path, node);
+              return;
+            }
+            for (const child of node.children.values()) walk(child);
+          })(root);
+          return map;
+        }
+
+        // Count files under a node (for sizing folder circles).
+        function countFiles(node) {
+          if (node.isFile) return 1;
+          let n = 0;
+          for (const child of node.children.values()) n += countFiles(child);
+          return n;
+        }
+
+        // ---------------------------------------------------------------
+        // 2. Visibility: given a set of expanded folder ids, compute the
+        //    currently-visible node for every leaf file, plus the group
+        //    structure needed to draw cluster boxes.
+        // ---------------------------------------------------------------
+
+        function computeVisible(root, expanded) {
+          const visibleNodes = new Map(); // id -> {node, kind: 'folder'|'file', fileCount}
+          const leafToVisible = new Map(); // leaf file path -> visible node id
+          // groupOf: visible-node-id -> immediate expanded parent id (for clustering), or null
+          const groupOf = new Map();
+          // groups: expanded folder id -> { node, memberIds: Set(direct visible children ids) }
+          const groups = new Map();
+
+          function walk(node, parentExpandedId) {
+            if (node.isFile) {
+              visibleNodes.set(node.id, { node, kind: "file", fileCount: 1 });
+              leafToVisible.set(node.path, node.id);
+              groupOf.set(node.id, parentExpandedId);
+              if (parentExpandedId)
+                groups.get(parentExpandedId).memberIds.add(node.id);
+              return;
+            }
+            const isRoot = node.path === "";
+            const isExpanded = isRoot || expanded.has(node.id);
+            if (!isExpanded) {
+              const fc = countFiles(node);
+              visibleNodes.set(node.id, {
+                node,
+                kind: "folder",
+                fileCount: fc,
+              });
+              // mark every descendant leaf as mapping to this collapsed node
+              (function markLeaves(n) {
+                if (n.isFile) leafToVisible.set(n.path, node.id);
+                else for (const c of n.children.values()) markLeaves(c);
+              })(node);
+              groupOf.set(node.id, parentExpandedId);
+              if (parentExpandedId)
+                groups.get(parentExpandedId).memberIds.add(node.id);
+              return;
+            }
+            // Expanded: not a node itself; recurse into children, forming a group
+            if (!isRoot) {
+              groups.set(node.id, {
+                node,
+                memberIds: new Set(),
+                parentGroupId: parentExpandedId,
+              });
+            }
+            const myGroupId = isRoot ? parentExpandedId : node.id;
+            for (const child of node.children.values()) walk(child, myGroupId);
+          }
+
+          walk(root, null);
+          return { visibleNodes, leafToVisible, groups, groupOf };
+        }
+
+        function buildEdges(fileMap, leafToVisible) {
+          // "src|||dst" -> { count, hasValue, hasType }. A file pair can be
+          // both (e.g. `import { type A, b } from "./x"`), in which case it
+          // renders as a normal solid edge - hasValue always wins visually.
+          const agg = new Map();
+          for (const [src, deps] of Object.entries(fileMap)) {
+            const vSrc = leafToVisible.get(src);
+            if (!vSrc) continue;
+            const valueSet = new Set(deps.value);
+            const typeSet = new Set(deps.types);
+            const allTargets = new Set([...valueSet, ...typeSet]);
+            for (const dst of allTargets) {
+              const vDst = leafToVisible.get(dst);
+              if (!vDst || vDst === vSrc) continue;
+              const key = vSrc + "|||" + vDst;
+              let entry = agg.get(key);
+              if (!entry) {
+                entry = { count: 0, hasValue: false, hasType: false };
+                agg.set(key, entry);
+              }
+              entry.count++;
+              if (valueSet.has(dst)) entry.hasValue = true;
+              if (typeSet.has(dst)) entry.hasType = true;
+            }
+          }
+          const edges = [];
+          for (const [key, entry] of agg) {
+            const [source, target] = key.split("|||");
+            edges.push({ source, target, ...entry });
+          }
+          return edges;
+        }
+
+        // Tarjan's algorithm. Used by the "cycles only" toggle to find which
+        // currently-visible nodes participate in an actual dependency cycle
+        // (an SCC of size > 1) at the current expand/collapse granularity.
+        function computeSCCs(nodeIds, edges) {
+          const adj = new Map();
+          for (const id of nodeIds) adj.set(id, []);
+          for (const e of edges) {
+            if (adj.has(e.source) && adj.has(e.target)) {
+              adj.get(e.source).push(e.target);
+            }
+          }
+
+          let index = 0;
+          const indices = new Map();
+          const lowlink = new Map();
+          const onStack = new Set();
+          const stack = [];
+          const sccOf = new Map(); // nodeId -> scc index
+          const sccSizes = []; // scc index -> member count
+
+          function strongconnect(v) {
+            indices.set(v, index);
+            lowlink.set(v, index);
+            index++;
+            stack.push(v);
+            onStack.add(v);
+
+            for (const w of adj.get(v)) {
+              if (!indices.has(w)) {
+                strongconnect(w);
+                lowlink.set(v, Math.min(lowlink.get(v), lowlink.get(w)));
+              } else if (onStack.has(w)) {
+                lowlink.set(v, Math.min(lowlink.get(v), indices.get(w)));
+              }
+            }
+
+            if (lowlink.get(v) === indices.get(v)) {
+              const sccIndex = sccSizes.length;
+              let size = 0;
+              let w;
+              do {
+                w = stack.pop();
+                onStack.delete(w);
+                sccOf.set(w, sccIndex);
+                size++;
+              } while (w !== v);
+              sccSizes.push(size);
+            }
+          }
+
+          for (const id of nodeIds) {
+            if (!indices.has(id)) strongconnect(id);
+          }
+
+          return { sccOf, sccSizes };
+        }
+
+        // ---------------------------------------------------------------
+        // 3. Rendering + force simulation
+        // ---------------------------------------------------------------
+
+        function init(fileMap) {
+          const root = buildTree(fileMap);
+          indexLeaves(root);
+
+          const expanded = new Set(); // folder ids currently expanded
+          let physicsEnabled = true; // whether dragging reheats the simulation
+          let sccMode = "off"; // "off" | "dim" | "hide" - cycles-only filter
+          let hoverId = null; // currently hovered node id, for focus dimming
+          let hideTypeOnly = false; // exclude type-only-only edges entirely
+
+          const svg = d3.select("#canvas");
+          const zoomLayer = svg.append("g").attr("class", "zoom-layer");
+          const clusterLayer = zoomLayer.append("g").attr("class", "clusters");
+          const edgeLayer = zoomLayer.append("g").attr("class", "edges");
+          const nodeLayer = zoomLayer.append("g").attr("class", "nodes");
+
+          // Edges are colored by their source node, so overlapping arrows in
+          // a dense view can be told apart by eye without hovering. Each
+          // palette color needs its own arrowhead marker since SVG markers
+          // can't inherit currentColor from the path that references them.
+          const EDGE_PALETTE = d3.schemeTableau10;
+          const edgeColor = d3.scaleOrdinal(EDGE_PALETTE);
+          function edgeSourceId(d) {
+            return typeof d.source === "object" ? d.source.id : d.source;
+          }
+          function edgeMarkerUrl(d) {
+            const color = edgeColor(edgeSourceId(d));
+            return "url(#arrow-" + EDGE_PALETTE.indexOf(color) + ")";
+          }
+
+          const defs = svg.append("defs");
+          EDGE_PALETTE.forEach((color, i) => {
+            defs
+              .append("marker")
+              .attr("id", "arrow-" + i)
+              .attr("viewBox", "0 0 10 10")
+              .attr("refX", 9)
+              .attr("refY", 5)
+              .attr("markerWidth", 7)
+              .attr("markerHeight", 7)
+              .attr("orient", "auto-start-reverse")
+              .append("path")
+              .attr("d", "M 0 0 L 10 5 L 0 10 z")
+              .attr("fill", color);
+          });
+
+          const zoom = d3
+            .zoom()
+            .scaleExtent([0.15, 4])
+            .on("zoom", (event) => {
+              zoomLayer.attr("transform", event.transform);
+            })
+            .on("start", () => svg.classed("panning", true))
+            .on("end", () => svg.classed("panning", false));
+          svg.call(zoom);
+
+          let width = window.innerWidth;
+          let height = window.innerHeight;
+          window.addEventListener("resize", () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            simulation.force("center", d3.forceCenter(width / 2, height / 2));
+            simulation.alpha(0.3).restart();
+          });
+
+          // Remember prior positions across re-layouts so nodes don't jump around.
+          const positionMemo = new Map(); // id -> {x, y}
+
+          const simulation = d3
+            .forceSimulation()
+            .force(
+              "link",
+              d3
+                .forceLink()
+                .id((d) => d.id)
+                .distance(linkDistance)
+                .strength(0.35),
+            )
+            .force("charge", d3.forceManyBody().strength(-160).distanceMax(420))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force(
+              "collide",
+              d3.forceCollide().radius((d) => d.radius + 14),
+            )
+            .force("cluster", clusterForce())
+            .alphaDecay(0.012);
+
+          function linkDistance(d) {
+            return 500 + 30 / Math.sqrt(d.count);
+          }
+
+          // Custom force: pull nodes that share an expanded-folder "group"
+          // toward their group's centroid, so clusters visually stay together.
+          // Strength is NOT scaled down for outliers (distance is baked in via
+          // a stronger constant) so straggler files don't get flung out and
+          // frozen there once alpha decays.
+          function clusterForce() {
+            let nodes = [];
+            function force(alpha) {
+              const centroids = new Map();
+              for (const n of nodes) {
+                if (!n.groupId) continue;
+                let c = centroids.get(n.groupId);
+                if (!c) {
+                  c = { x: 0, y: 0, n: 0 };
+                  centroids.set(n.groupId, c);
+                }
+                c.x += n.x;
+                c.y += n.y;
+                c.n++;
+              }
+              for (const c of centroids.values()) {
+                c.x /= c.n;
+                c.y /= c.n;
+              }
+              for (const n of nodes) {
+                if (!n.groupId) continue;
+                const c = centroids.get(n.groupId);
+                n.vx += (c.x - n.x) * alpha * 0.5;
+                n.vy += (c.y - n.y) * alpha * 0.5;
+              }
+            }
+            force.initialize = (_nodes) => {
+              nodes = _nodes;
+            };
+            return force;
+          }
+
+          let simNodes = [];
+          let simLinks = [];
+
+          function radiusFor(kind, fileCount) {
+            if (kind === "file") return 9;
+            return Math.max(16, Math.min(42, 12 + Math.sqrt(fileCount) * 6));
+          }
+
+          function colorFor(kind) {
+            return kind === "file" ? "var(--file)" : "var(--folder)";
+          }
+
+          function render() {
+            const { visibleNodes, leafToVisible, groups, groupOf } =
+              computeVisible(root, expanded);
+            let edges = buildEdges(fileMap, leafToVisible);
+            if (hideTypeOnly) {
+              // Only drop edges that are *entirely* type-only; an edge with
+              // any real value import stays, since it represents a genuine
+              // code dependency regardless of what else rides along with it.
+              edges = edges.filter((e) => e.hasValue || !e.hasType);
+            }
+
+            // Which currently-visible nodes sit in an SCC of size > 1 (i.e.
+            // participate in an actual dependency cycle at this granularity).
+            const nodeIds = Array.from(visibleNodes.keys());
+            const { sccOf, sccSizes } = computeSCCs(nodeIds, edges);
+            const inMultiScc = (id) => sccSizes[sccOf.get(id)] > 1;
+
+            let nodeEntries = Array.from(visibleNodes.entries());
+            let edgeList = edges;
+            if (sccMode === "hide") {
+              nodeEntries = nodeEntries.filter(([id]) => inMultiScc(id));
+              const keep = new Set(nodeEntries.map(([id]) => id));
+              edgeList = edges.filter(
+                (e) => keep.has(e.source) && keep.has(e.target),
+              );
+            }
+
+            document.getElementById("stat-nodes").textContent =
+              nodeEntries.length;
+            document.getElementById("stat-edges").textContent =
+              edgeList.length;
+            breadcrumbEl.textContent = expanded.size
+              ? "Expanded: " + Array.from(expanded).join(", ")
+              : "Showing top-level folders";
+
+            simNodes = nodeEntries.map(([id, info]) => {
+              const memo = positionMemo.get(id);
+              const parentMemo = info.node.parent
+                ? positionMemo.get(info.node.parent.id)
+                : null;
+              const fallback = parentMemo || {
+                x: width / 2 + (Math.random() - 0.5) * 40,
+                y: height / 2 + (Math.random() - 0.5) * 40,
+              };
+              return {
+                id,
+                kind: info.kind,
+                name: info.node.name,
+                fileCount: info.fileCount,
+                radius: radiusFor(info.kind, info.fileCount),
+                groupId: groupOf.get(id) || null,
+                inMultiScc: inMultiScc(id),
+                x: memo ? memo.x : fallback.x,
+                y: memo ? memo.y : fallback.y,
+              };
+            });
+
+            simLinks = edgeList.map((e) => ({
+              source: e.source,
+              target: e.target,
+              count: e.count,
+              hasValue: e.hasValue,
+              hasType: e.hasType,
+            }));
+
+            simulation.force("cluster").initialize
+              ? simulation.force("cluster").initialize(simNodes)
+              : null;
+            simulation.nodes(simNodes);
+            simulation.force("link").links(simLinks);
+            simulation.alpha(0.9).restart();
+
+            draw(groups);
+          }
+
+          function draw(groups) {
+            // ---- Edges ----
+            const edgeSel = edgeLayer
+              .selectAll("g.edge")
+              .data(simLinks, (d) => d.source + ">" + d.target);
+            edgeSel.exit().remove();
+            const edgeEnter = edgeSel.enter().append("g").attr("class", "edge");
+            edgeEnter.append("path").attr("class", "edge-path");
+            edgeEnter.append("rect").attr("class", "edge-label-bg");
+            edgeEnter
+              .append("text")
+              .attr("class", "edge-label")
+              .attr("text-anchor", "middle");
+            const edgeMerge = edgeEnter.merge(edgeSel);
+            edgeMerge
+              .select("path")
+              .attr("stroke-width", (d) =>
+                Math.min(6, 1 + Math.log2(d.count + 1)),
+              )
+              .attr("stroke", (d) => edgeColor(edgeSourceId(d)))
+              .attr("marker-end", (d) => edgeMarkerUrl(d))
+              .attr("stroke-dasharray", (d) =>
+                d.hasType && !d.hasValue ? "6 4" : null,
+              );
+            edgeMerge.select("text").text((d) => d.count);
+
+            // ---- Nodes ----
+            const nodeSel = nodeLayer
+              .selectAll("g.node-group")
+              .data(simNodes, (d) => d.id);
+            nodeSel.exit().remove();
+            const nodeEnter = nodeSel
+              .enter()
+              .append("g")
+              .attr("class", "node-group")
+              .call(drag(simulation))
+              .on("click", (event, d) => {
+                event.stopPropagation();
+                if (d.kind === "folder") {
+                  expanded.add(d.id);
+                  render();
+                }
+              })
+              .on("mouseenter", (event, d) => setFocus(d.id))
+              .on("mouseleave", () => setFocus(null));
+            nodeEnter.append("circle").attr("class", "node-circle");
+            nodeEnter
+              .append("text")
+              .attr("class", "node-label")
+              .attr("text-anchor", "middle");
+            nodeEnter
+              .append("text")
+              .attr("class", "node-sublabel")
+              .attr("text-anchor", "middle");
+
+            const nodeMerge = nodeEnter.merge(nodeSel);
+            nodeMerge
+              .select("circle")
+              .attr("r", (d) => d.radius)
+              .attr("fill", (d) => colorFor(d.kind));
+            nodeMerge
+              .select(".node-label")
+              .attr("dy", (d) => -d.radius - 6)
+              .text((d) => truncate(d.name, 22));
+            nodeMerge
+              .select(".node-sublabel")
+              .attr("dy", (d) => (d.kind === "folder" ? 4 : 3))
+              .text((d) => (d.kind === "folder" ? d.fileCount + " files" : ""));
+
+            // ---- Cluster boxes (drawn under nodes, behind everything else in clusterLayer) ----
+            const groupList = Array.from(groups.values());
+            const clusterSel = clusterLayer
+              .selectAll("g.cluster")
+              .data(groupList, (d) => d.node.id);
+            clusterSel.exit().remove();
+            const clusterEnter = clusterSel
+              .enter()
+              .append("g")
+              .attr("class", "cluster")
+              .on("click", (event, d) => {
+                event.stopPropagation();
+                collapseFolder(d.node.id);
+              });
+            clusterEnter.append("path").attr("class", "cluster-box");
+            clusterEnter.append("text").attr("class", "cluster-label");
+            // (merge handled in tick, since box depends on live node positions)
+            currentGroups = groupList;
+
+            simulation.on("tick", tick);
+            tick();
+            applyDimming();
+          }
+
+          let currentGroups = [];
+
+          // Hover-to-focus: dim every node/edge not connected to the
+          // hovered node, so a single node's dependencies can be traced by
+          // eye in a dense graph instead of following overlapping lines.
+          // Combined with the "cycles only" dim mode into one function so
+          // the two dimming sources compose instead of each clobbering the
+          // other's inline opacity style.
+          function setFocus(id) {
+            hoverId = id;
+            applyDimming();
+          }
+
+          function applyDimming() {
+            let connected = null;
+            if (hoverId) {
+              connected = new Set([hoverId]);
+              for (const l of simLinks) {
+                const srcId = edgeSourceId(l);
+                const dstId =
+                  typeof l.target === "object" ? l.target.id : l.target;
+                if (srcId === hoverId) connected.add(dstId);
+                if (dstId === hoverId) connected.add(srcId);
+              }
+            }
+
+            nodeLayer.selectAll("g.node-group").style("opacity", (d) => {
+              let op = 1;
+              if (sccMode === "dim" && !d.inMultiScc) op = 0.15;
+              if (connected && !connected.has(d.id)) op = Math.min(op, 0.15);
+              return op;
+            });
+
+            edgeLayer.selectAll("g.edge").style("opacity", (d) => {
+              let op = 1;
+              if (sccMode === "dim") {
+                const srcOk =
+                  typeof d.source === "object" ? d.source.inMultiScc : true;
+                const dstOk =
+                  typeof d.target === "object" ? d.target.inMultiScc : true;
+                if (!srcOk || !dstOk) op = 0.1;
+              }
+              if (connected) {
+                const srcId = edgeSourceId(d);
+                const dstId =
+                  typeof d.target === "object" ? d.target.id : d.target;
+                if (!(srcId === hoverId || dstId === hoverId)) {
+                  op = Math.min(op, 0.06);
+                }
+              }
+              return op;
+            });
+          }
+
+          function collapseFolder(folderId) {
+            // Collapsing a folder also collapses any expanded descendants,
+            // since they can't be visible once their parent re-merges.
+            expanded.delete(folderId);
+            for (const id of Array.from(expanded)) {
+              if (id.startsWith(folderId + "/")) expanded.delete(id);
+            }
+            render();
+          }
+
+          function tick() {
+            clampToGroups();
+            for (const n of simNodes)
+              positionMemo.set(n.id, { x: n.x, y: n.y });
+
+            nodeLayer
+              .selectAll("g.node-group")
+              .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+            edgeLayer.selectAll("g.edge").each(function (d) {
+              // d3.forceLink() resolves d.source/d.target from string ids to
+              // the actual node objects in place once links() has been called.
+              const s = d.source,
+                t = d.target;
+              if (
+                !s ||
+                typeof s.x !== "number" ||
+                !t ||
+                typeof t.x !== "number"
+              )
+                return;
+              const path = edgeCurve(s, t);
+              d3.select(this).select("path").attr("d", path.d);
+              d3.select(this)
+                .select("rect")
+                .attr("x", path.midX - 12)
+                .attr("y", path.midY - 8)
+                .attr("width", 24)
+                .attr("height", 14)
+                .attr("rx", 4);
+              d3.select(this)
+                .select("text")
+                .attr("x", path.midX)
+                .attr("y", path.midY + 3);
+            });
+
+            clusterLayer.selectAll("g.cluster").each(function (d) {
+              const members = simNodes.filter(
+                (n) =>
+                  n.groupId === d.node.id || isDescendantGroup(n, d.node.id),
+              );
+              const pts = members.length
+                ? members
+                : [
+                    {
+                      x: d.__lastX || width / 2,
+                      y: d.__lastY || height / 2,
+                      radius: 20,
+                    },
+                  ];
+              const hull = hullPath(pts);
+              d.__lastX = hull.cx;
+              d.__lastY = hull.cy;
+              const g = d3.select(this);
+              g.select("path").attr("d", hull.d);
+              g.select("text")
+                .attr("x", hull.labelX)
+                .attr("y", hull.labelY)
+                .text(d.node.name + "  (click to collapse)");
+            });
+          }
+
+          // Padded convex hull around a group's member nodes, so the boundary
+          // hugs only the actual members instead of an axis-aligned box that
+          // can visually swallow unrelated nodes sitting in a corner gap.
+          const HULL_PAD = 26;
+          function hullPath(members) {
+            let sx = 0,
+              sy = 0;
+            for (const m of members) {
+              sx += m.x;
+              sy += m.y;
+            }
+            const cx = sx / members.length,
+              cy = sy / members.length;
+
+            if (members.length < 3) {
+              const r = Math.max(...members.map((m) => m.radius)) + HULL_PAD;
+              const top = cy - r;
+              return {
+                cx,
+                cy,
+                labelX: cx - r,
+                labelY: top - 10,
+                d: `M${cx - r},${cy}A${r},${r} 0 1,0 ${cx + r},${cy}A${r},${r} 0 1,0 ${cx - r},${cy}Z`,
+              };
+            }
+
+            const rawHull = d3.polygonHull(members.map((m) => [m.x, m.y]));
+            if (!rawHull) {
+              const r = Math.max(...members.map((m) => m.radius)) + HULL_PAD;
+              return {
+                cx,
+                cy,
+                labelX: cx - r,
+                labelY: cy - r - 10,
+                d: `M${cx - r},${cy}A${r},${r} 0 1,0 ${cx + r},${cy}A${r},${r} 0 1,0 ${cx - r},${cy}Z`,
+              };
+            }
+            // Push each hull vertex outward from the centroid to pad the boundary.
+            const padded = rawHull.map(([x, y]) => {
+              const dx = x - cx,
+                dy = y - cy;
+              const dist = Math.max(1, Math.hypot(dx, dy));
+              const k = (dist + HULL_PAD) / dist;
+              return [cx + dx * k, cy + dy * k];
+            });
+            let minY = Infinity,
+              minYX = cx;
+            for (const [x, y] of padded)
+              if (y < minY) {
+                minY = y;
+                minYX = x;
+              }
+            const line = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.7));
+            return {
+              cx,
+              cy,
+              labelX: minYX - 20,
+              labelY: minY - 10,
+              d: line(padded),
+            };
+          }
+
+          // Hard containment: disconnected files with no in-group edges can
+          // still get flung out by charge/repulsion before the spring-like
+          // clusterForce fully corrects it. Clamp every group's members
+          // inside a radius of that group's centroid each frame so cluster
+          // boundaries always stay tight, regardless of how the physics
+          // settles. Processed shallow-to-deep so an outer expanded folder
+          // establishes rough containment (including nested sub-groups)
+          // before a nested sub-group tightens further within it.
+          function clampToGroups() {
+            const ordered = [...currentGroups].sort(
+              (a, b) =>
+                a.node.id.split("/").length - b.node.id.split("/").length,
+            );
+            for (const g of ordered) {
+              const members = simNodes.filter(
+                (n) =>
+                  n.groupId === g.node.id || isDescendantGroup(n, g.node.id),
+              );
+              if (!members.length) continue;
+              let sx = 0,
+                sy = 0;
+              for (const m of members) {
+                sx += m.x;
+                sy += m.y;
+              }
+              const cx = sx / members.length,
+                cy = sy / members.length;
+              const maxR = 55 + Math.sqrt(members.length) * 42;
+              for (const m of members) {
+                const dx = m.x - cx,
+                  dy = m.y - cy;
+                const dist = Math.hypot(dx, dy);
+                if (dist > maxR) {
+                  const k = maxR / dist;
+                  m.x = cx + dx * k;
+                  m.y = cy + dy * k;
+                }
+              }
+            }
+          }
+
+          function isDescendantGroup(node, groupId) {
+            // node.groupId might belong to a nested expanded folder inside groupId;
+            // walk up via path string prefix check.
+            return (
+              node.groupId &&
+              node.groupId !== groupId &&
+              node.groupId.startsWith(groupId + "/")
+            );
+          }
+
+          // Quadratic-bezier edge, bowed out perpendicular to the
+          // source->target direction. This keeps overlapping edges (and
+          // especially A->B / B->A pairs, which would sit exactly on top of
+          // each other as straight lines) visually distinguishable.
+          function edgeCurve(s, t) {
+            const dx = t.x - s.x,
+              dy = t.y - s.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            const ux = dx / dist,
+              uy = dy / dist;
+            const x1 = s.x + ux * (s.radius + 2);
+            const y1 = s.y + uy * (s.radius + 2);
+            const x2 = t.x - ux * (t.radius + 8);
+            const y2 = t.y - uy * (t.radius + 8);
+
+            const px = -uy,
+              py = ux;
+            const bow = Math.min(40, dist * 0.15);
+            const cx = (x1 + x2) / 2 + px * bow;
+            const cy = (y1 + y2) / 2 + py * bow;
+
+            // Point at t=0.5 on the quadratic curve, for label placement.
+            const midX = 0.25 * x1 + 0.5 * cx + 0.25 * x2;
+            const midY = 0.25 * y1 + 0.5 * cy + 0.25 * y2;
+
+            return { d: `M${x1},${y1}Q${cx},${cy} ${x2},${y2}`, midX, midY };
+          }
+
+          function truncate(str, n) {
+            return str.length > n ? str.slice(0, n - 1) + "…" : str;
+          }
+
+          function drag(sim) {
+            return d3
+              .drag()
+              .on("start", (event, d) => {
+                d.fx = d.x;
+                d.fy = d.y;
+                if (physicsEnabled && !event.active) {
+                  sim.alphaTarget(0.15).restart();
+                }
+              })
+              .on("drag", (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+                if (!physicsEnabled) {
+                  // The simulation is never reheated in this mode, so it may
+                  // be fully at rest (no ticks firing on its own). Move the
+                  // dragged node and redraw manually - everything else is
+                  // left untouched since we never call the force forward.
+                  d.x = event.x;
+                  d.y = event.y;
+                  tick();
+                }
+              })
+              .on("end", (event, d) => {
+                if (physicsEnabled) {
+                  if (!event.active) sim.alphaTarget(0);
+                  d.fx = null;
+                  d.fy = null;
+                }
+                // physics off: leave fx/fy set so the node stays pinned
+                // exactly where it was dropped, instead of being released
+                // back into the simulation to keep drifting.
+              });
+          }
+
+          document.getElementById("reset-btn").addEventListener("click", () => {
+            expanded.clear();
+            positionMemo.clear();
+            render();
+          });
+
+          document
+            .getElementById("physics-toggle")
+            .addEventListener("change", (e) => {
+              physicsEnabled = e.target.checked;
+            });
+
+          document
+            .getElementById("hide-type-toggle")
+            .addEventListener("change", (e) => {
+              hideTypeOnly = e.target.checked;
+              render();
+            });
+
+          const sccToggleEl = document.getElementById("scc-toggle");
+          const sccToggleLabelEl = sccToggleEl.querySelector(
+            ".triple-toggle-label",
+          );
+          const SCC_MODES = ["off", "dim", "hide"];
+          const SCC_LABELS = { off: "Off", dim: "Dim", hide: "Hide" };
+          sccToggleEl.addEventListener("click", () => {
+            sccMode =
+              SCC_MODES[(SCC_MODES.indexOf(sccMode) + 1) % SCC_MODES.length];
+            sccToggleEl.setAttribute("data-state", sccMode);
+            sccToggleLabelEl.textContent = SCC_LABELS[sccMode];
+            render();
+          });
+
+          render();
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Dependency Graph Viewer</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a0a;
+        font-family: "Arial", sans-serif;
+        overflow: hidden;
+      }
+
+      #container {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 100;
+      }
+
+      #controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 100;
+      }
+
+      #file-info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 100;
+        display: none;
+      }
+
+      #labels-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      .label {
+        position: absolute;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        white-space: nowrap;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .directory-label {
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .file-label {
+        font-size: 11px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="info">
+      <h3>3D Dependency Graph</h3>
+      <p>Files: <span id="file-count">0</span></p>
+      <p>Dependencies: <span id="dep-count">0</span></p>
+    </div>
+
+    <div id="controls">
+      <p><strong>Controls:</strong></p>
+      <p>Mouse: Rotate camera</p>
+      <p>Scroll: Zoom</p>
+      <p>Right-click: Pan</p>
+      <p>Hover files: Show labels</p>
+      <p>Ctrl+I: Toggle all labels</p>
+    </div>
+
+    <div id="file-info">
+      <strong id="file-name"></strong><br />
+      <span id="file-deps"></span>
+    </div>
+
+    <div id="labels-container">
+      <!-- Directory and file labels will be added here dynamically -->
+    </div>
+
+    <div id="container"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+
+      class DependencyGraphVisualizer {
+        constructor() {
+          this.scene = null;
+          this.camera = null;
+          this.renderer = null;
+          this.controls = null;
+          this.nodes = new Map();
+          this.edges = [];
+          this.raycaster = new THREE.Raycaster();
+          this.mouse = new THREE.Vector2();
+          this.selectedNode = null;
+          this.labelsVisible = false; // Labels start hidden
+
+          this.init();
+          this.loadDependencies();
+        }
+
+        init() {
+          // Scene
+          this.scene = new THREE.Scene();
+          this.scene.background = new THREE.Color(0x0a0a0a);
+
+          // Camera
+          this.camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+          );
+          this.camera.position.set(50, 50, 50);
+
+          // Renderer
+          this.renderer = new THREE.WebGLRenderer({ antialias: true });
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+          document
+            .getElementById("container")
+            .appendChild(this.renderer.domElement);
+
+          // Controls
+          this.setupControls();
+
+          // Lighting
+          this.setupLighting();
+
+          // Event listeners
+          window.addEventListener("resize", () => this.onWindowResize());
+          window.addEventListener("mousemove", (event) =>
+            this.onMouseMove(event)
+          );
+          window.addEventListener("click", (event) => this.onMouseClick(event));
+          window.addEventListener("contextmenu", (event) =>
+            event.preventDefault()
+          );
+          window.addEventListener("keydown", (event) => this.onKeyDown(event));
+
+          // Animation loop
+          this.animate();
+        }
+
+        setupControls() {
+          // Simple orbit controls (we'll implement basic ones)
+          this.controls = {
+            rotateSpeed: 0.005,
+            zoomSpeed: 0.1,
+            panSpeed: 0.08,
+            isRotating: false,
+            isPanning: false,
+            lastMouseX: 0,
+            lastMouseY: 0,
+          };
+
+          const container = this.renderer.domElement;
+          container.addEventListener("mousedown", (event) =>
+            this.onMouseDown(event)
+          );
+          container.addEventListener("mouseup", () => this.onMouseUp());
+          container.addEventListener("wheel", (event) => this.onWheel(event));
+        }
+
+        setupLighting() {
+          const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+          this.scene.add(ambientLight);
+
+          const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+          directionalLight.position.set(10, 10, 5);
+          this.scene.add(directionalLight);
+
+          const pointLight = new THREE.PointLight(0x4488ff, 0.5);
+          pointLight.position.set(-10, -10, -10);
+          this.scene.add(pointLight);
+        }
+
+        async loadDependencies() {
+          try {
+            const response = await fetch("./dependencies.json");
+            const dependencies = await response.json();
+            this.createGraph(dependencies);
+          } catch (error) {
+            console.error("Failed to load dependencies.json:", error);
+            // Create sample data for testing
+            this.createSampleGraph();
+          }
+        }
+
+        createGraph(dependencies) {
+          // Clear existing graph
+          this.clearGraph();
+
+          // Create nodes
+          const fileNames = Object.keys(dependencies);
+          fileNames.forEach((fileName) => {
+            this.createNode(fileName);
+          });
+
+          // Create edges
+          fileNames.forEach((fileName) => {
+            const deps = dependencies[fileName];
+            deps.forEach((dep) => {
+              this.createEdge(fileName, dep);
+            });
+          });
+
+          // Position nodes using force-directed layout
+          this.layoutGraph(fileNames, dependencies);
+
+          // Create HTML labels for directories and files
+          this.createFileLabels();
+
+          // Update info display
+          document.getElementById("file-count").textContent = fileNames.length;
+          const totalDeps = fileNames.reduce(
+            (sum, file) => sum + dependencies[file].length,
+            0
+          );
+          document.getElementById("dep-count").textContent = totalDeps;
+        }
+
+        createSampleGraph() {
+          const sampleDeps = {
+            "main.ts": ["calculator.ts"],
+            "calculator.ts": ["utils.ts"],
+            "utils.ts": [],
+          };
+          this.createGraph(sampleDeps);
+        }
+
+        createNode(fileName) {
+          // Create node geometry and material
+          const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+          const material = new THREE.MeshPhongMaterial({
+            color: this.getFileColor(fileName),
+            shininess: 100,
+          });
+
+          const node = new THREE.Mesh(geometry, material);
+          node.userData = { fileName, type: "node" };
+
+          this.scene.add(node);
+          this.nodes.set(fileName, node);
+        }
+
+        createEdge(fromFile, toFile) {
+          const fromNode = this.nodes.get(fromFile);
+          const toNode = this.nodes.get(toFile);
+
+          if (!fromNode || !toNode) return;
+
+          // Create line geometry
+          const geometry = new THREE.BufferGeometry();
+          const positions = new Float32Array([
+            fromNode.position.x,
+            fromNode.position.y,
+            fromNode.position.z,
+            toNode.position.x,
+            toNode.position.y,
+            toNode.position.z,
+          ]);
+          geometry.setAttribute(
+            "position",
+            new THREE.BufferAttribute(positions, 3)
+          );
+
+          const material = new THREE.LineBasicMaterial({
+            color: 0x888888,
+            transparent: true,
+            opacity: 0.6,
+          });
+
+          const line = new THREE.Line(geometry, material);
+          line.userData = { type: "edge", from: fromFile, to: toFile };
+
+          this.scene.add(line);
+          this.edges.push(line);
+        }
+
+        layoutGraph(fileNames, dependencies) {
+          // Hierarchical directory-based layout
+          const directoryGroups = this.groupFilesByDirectory(fileNames);
+          this.positionDirectories(directoryGroups);
+          this.positionFilesWithinDirectories(directoryGroups, dependencies);
+          this.updateEdges();
+        }
+
+        groupFilesByDirectory(fileNames) {
+          const groups = new Map();
+
+          fileNames.forEach((fileName) => {
+            const parts = fileName.split("/");
+            let directory = parts[0];
+
+            // Handle root-level files
+            if (!directory.includes(".") && parts.length === 1) {
+              directory = "root";
+            } else if (directory.includes(".")) {
+              // This is a root-level file with extension
+              directory = "root";
+            }
+
+            if (!groups.has(directory)) {
+              groups.set(directory, {
+                name: directory,
+                files: [],
+                center: new THREE.Vector3(),
+                color: this.getDirectoryColor(directory),
+              });
+            }
+
+            groups.get(directory).files.push(fileName);
+          });
+
+          return groups;
+        }
+
+        positionDirectories(directoryGroups) {
+          const directories = Array.from(directoryGroups.values()).filter(
+            (dir) => dir.name !== "root"
+          );
+          const sphereRadius = 30;
+
+          // Distribute directories on a sphere surface for true 3D layout
+          directories.forEach((dir, index) => {
+            const phi = Math.acos(2 * (index / (directories.length - 1)) - 1); // Elevation angle
+            const theta = Math.sqrt(directories.length * Math.PI) * phi; // Azimuthal angle
+
+            dir.center.set(
+              sphereRadius * Math.sin(phi) * Math.cos(theta),
+              sphereRadius * Math.sin(phi) * Math.sin(theta),
+              sphereRadius * Math.cos(phi)
+            );
+          });
+
+          // Root stays at center
+          const rootDir = Array.from(directoryGroups.values()).find(
+            (dir) => dir.name === "root"
+          );
+          if (rootDir) {
+            rootDir.center.set(0, 0, 0);
+          }
+        }
+
+        positionFilesWithinDirectories(directoryGroups, dependencies) {
+          directoryGroups.forEach((dir) => {
+            const files = dir.files;
+            const center = dir.center;
+
+            if (dir.name === "root") {
+              // Root files clustered tightly around center
+              files.forEach((fileName, index) => {
+                const node = this.nodes.get(fileName);
+                if (node) {
+                  const angle = (index / files.length) * Math.PI * 2;
+                  const distance = 2;
+                  node.position.set(
+                    center.x + Math.cos(angle) * distance,
+                    center.y + Math.sin(angle) * distance,
+                    center.z
+                  );
+                }
+              });
+            } else {
+              // Files within directory clustered around directory center
+              const clusterRadius = Math.max(
+                3,
+                Math.min(8, files.length * 0.5)
+              );
+              files.forEach((fileName, index) => {
+                const node = this.nodes.get(fileName);
+                if (node) {
+                  const angle = (index / files.length) * Math.PI * 2;
+                  const distance = clusterRadius * (0.5 + Math.random() * 0.5);
+                  node.position.set(
+                    center.x + Math.cos(angle) * distance,
+                    center.y + Math.sin(angle) * distance,
+                    center.z + (Math.random() - 0.5) * 12
+                  );
+                }
+              });
+
+              // Add directory label
+              this.addDirectoryLabel(dir);
+            }
+          });
+        }
+
+        addDirectoryLabel(directory) {
+          // Create HTML label element
+          const labelElement = document.createElement("div");
+          labelElement.className = "label directory-label";
+          labelElement.textContent = directory.name;
+          labelElement.dataset.directory = directory.name;
+
+          document.getElementById("labels-container").appendChild(labelElement);
+
+          // Store reference for positioning
+          directory.labelElement = labelElement;
+
+          // Create the visual indicator sphere with label
+          const geometry = new THREE.SphereGeometry(1.5, 16, 16);
+          const material = new THREE.MeshPhongMaterial({
+            color: directory.color,
+            transparent: true,
+            opacity: 0.7,
+            emissive: directory.color,
+            emissiveIntensity: 0.2,
+          });
+
+          const labelNode = new THREE.Mesh(geometry, material);
+          labelNode.position.copy(directory.center);
+          labelNode.userData = {
+            type: "directory-label",
+            directory: directory.name,
+            labelElement: labelElement,
+          };
+
+          this.scene.add(labelNode);
+
+          // Store reference for cleanup
+          if (!this.directoryLabels) this.directoryLabels = [];
+          this.directoryLabels.push(labelNode);
+        }
+
+        createFileLabels() {
+          // Create labels for all files
+          this.nodes.forEach((node, fileName) => {
+            const labelElement = document.createElement("div");
+            labelElement.className = "label file-label";
+            labelElement.textContent = fileName.split("/").pop(); // Just filename, not full path
+            labelElement.dataset.file = fileName;
+            labelElement.style.display = "none"; // Hidden by default, show on hover
+
+            document
+              .getElementById("labels-container")
+              .appendChild(labelElement);
+            node.userData.labelElement = labelElement;
+          });
+        }
+
+        updateLabels() {
+          if (!this.labelsVisible) return;
+
+          // Update directory labels
+          const directoryGroups = this.groupFilesByDirectory(
+            Array.from(this.nodes.keys())
+          );
+          directoryGroups.forEach((dir) => {
+            if (dir.labelElement && dir.name !== "root") {
+              this.updateLabelPosition(dir.labelElement, dir.center);
+            }
+          });
+
+          // Update file labels (only show for selected/hovered nodes)
+          this.nodes.forEach((node, fileName) => {
+            const labelElement = node.userData.labelElement;
+            if (labelElement) {
+              this.updateLabelPosition(labelElement, node.position);
+            }
+          });
+        }
+
+        updateLabelPosition(labelElement, worldPosition) {
+          // Convert 3D world position to 2D screen coordinates
+          const screenPosition = worldPosition.clone();
+          screenPosition.project(this.camera);
+
+          const x = (screenPosition.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-screenPosition.y * 0.5 + 0.5) * window.innerHeight;
+
+          // Position the label
+          labelElement.style.left = `${x}px`;
+          labelElement.style.top = `${y}px`;
+
+          // Hide labels that are behind the camera or too far
+          const distance = this.camera.position.distanceTo(worldPosition);
+          const isVisible =
+            screenPosition.z > -1 && screenPosition.z < 1 && distance < 100;
+
+          labelElement.style.display = isVisible ? "block" : "none";
+        }
+
+        getDirectoryColor(directoryName) {
+          const colors = {
+            BufferUtils: 0x4a90e2, // Blue
+            UI_library: 0xf5a623, // Orange
+            UI_setup: 0xe94b3c, // Red
+            helpers: 0x7ed321, // Green
+            nunigraph: 0x9013fe, // Purple
+            program: 0x50e3c2, // Teal
+            scale_utils: 0xb8e986, // Light green
+            share_project: 0xd0021b, // Dark red
+            storage: 0xf8e71c, // Yellow
+            visualizer: 0xbd10e0, // Magenta
+            waveform_utils: 0xff6b35, // Coral
+            webaudio2: 0x00d4aa, // Aqua
+            root: 0xffffff, // White
+          };
+          return colors[directoryName] || 0x888888;
+        }
+
+        updateEdges() {
+          this.edges.forEach((edge) => {
+            const fromNode = this.nodes.get(edge.userData.from);
+            const toNode = this.nodes.get(edge.userData.to);
+
+            if (fromNode && toNode) {
+              const positions = edge.geometry.attributes.position.array;
+              positions[0] = fromNode.position.x;
+              positions[1] = fromNode.position.y;
+              positions[2] = fromNode.position.z;
+              positions[3] = toNode.position.x;
+              positions[4] = toNode.position.y;
+              positions[5] = toNode.position.z;
+              edge.geometry.attributes.position.needsUpdate = true;
+            }
+          });
+        }
+
+        getFileColor(fileName) {
+          // Generate color based on file extension
+          const ext = fileName.split(".").pop().toLowerCase();
+          switch (ext) {
+            case "ts":
+              return 0x3178c6; // TypeScript blue
+            case "js":
+              return 0xf7df1e; // JavaScript yellow
+            case "tsx":
+              return 0x61dafb; // React blue
+            case "jsx":
+              return 0x61dafb; // React blue
+            default:
+              return 0x888888; // Gray
+          }
+        }
+
+        clearGraph() {
+          // Remove all nodes and edges
+          this.nodes.forEach((node) => this.scene.remove(node));
+          this.edges.forEach((edge) => this.scene.remove(edge));
+          this.nodes.clear();
+          this.edges = [];
+
+          // Remove directory labels
+          if (this.directoryLabels) {
+            this.directoryLabels.forEach((label) => this.scene.remove(label));
+            this.directoryLabels = [];
+          }
+
+          // Remove HTML labels
+          const labelsContainer = document.getElementById("labels-container");
+          while (labelsContainer.firstChild) {
+            labelsContainer.removeChild(labelsContainer.firstChild);
+          }
+        }
+
+        onWindowResize() {
+          this.camera.aspect = window.innerWidth / window.innerHeight;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        onMouseDown(event) {
+          event.preventDefault();
+          this.controls.isRotating = event.button === 0;
+          this.controls.isPanning = event.button === 2;
+          this.controls.lastMouseX = event.clientX;
+          this.controls.lastMouseY = event.clientY;
+        }
+
+        onMouseUp() {
+          this.controls.isRotating = false;
+          this.controls.isPanning = false;
+        }
+
+        onWheel(event) {
+          event.preventDefault();
+          const zoomAmount = event.deltaY * this.controls.zoomSpeed;
+          this.camera.position.multiplyScalar(1 + zoomAmount / 100);
+        }
+
+        onMouseMove(event) {
+          this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+          this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+          // Handle file hover for labels
+          this.handleFileHover();
+
+          if (this.controls.isRotating) {
+            const deltaX = event.clientX - this.controls.lastMouseX;
+            const deltaY = event.clientY - this.controls.lastMouseY;
+
+            this.camera.position.applyAxisAngle(
+              new THREE.Vector3(0, 1, 0),
+              -deltaX * this.controls.rotateSpeed
+            );
+            this.camera.position.applyAxisAngle(
+              new THREE.Vector3(1, 0, 0),
+              -deltaY * this.controls.rotateSpeed
+            );
+
+            this.camera.lookAt(0, 0, 0);
+          }
+
+          if (this.controls.isPanning) {
+            const deltaX = event.clientX - this.controls.lastMouseX;
+            const deltaY = event.clientY - this.controls.lastMouseY;
+
+            const right = new THREE.Vector3()
+              .crossVectors(
+                this.camera.getWorldDirection(new THREE.Vector3()),
+                this.camera.up
+              )
+              .normalize();
+            const up = this.camera.up.clone();
+
+            right.multiplyScalar(-deltaX * this.controls.panSpeed);
+            up.multiplyScalar(deltaY * this.controls.panSpeed);
+
+            this.camera.position.add(right);
+            this.camera.position.add(up);
+          }
+
+          this.controls.lastMouseX = event.clientX;
+          this.controls.lastMouseY = event.clientY;
+        }
+
+        handleFileHover() {
+          // Check for file node intersections
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+          const intersects = this.raycaster.intersectObjects(
+            Array.from(this.nodes.values())
+          );
+
+          // Hide all file labels first
+          this.nodes.forEach((node) => {
+            if (node.userData.labelElement) {
+              node.userData.labelElement.style.display = "none";
+            }
+          });
+
+          // Show label for hovered file
+          if (intersects.length > 0) {
+            const hoveredNode = intersects[0].object;
+            if (hoveredNode.userData.labelElement) {
+              hoveredNode.userData.labelElement.style.display = "block";
+            }
+          }
+        }
+
+        onMouseClick(event) {
+          this.raycaster.setFromCamera(this.mouse, this.camera);
+
+          const intersects = this.raycaster.intersectObjects(
+            Array.from(this.nodes.values())
+          );
+
+          if (intersects.length > 0) {
+            const clickedNode = intersects[0].object;
+            this.selectNode(clickedNode);
+          } else {
+            this.deselectNode();
+          }
+        }
+
+        selectNode(node) {
+          // Reset previous selection
+          if (this.selectedNode) {
+            this.selectedNode.material.emissive.setHex(0x000000);
+            // Hide previous file label
+            if (this.selectedNode.userData.labelElement) {
+              this.selectedNode.userData.labelElement.style.display = "none";
+            }
+          }
+
+          // Highlight new selection
+          node.material.emissive.setHex(0x444444);
+          this.selectedNode = node;
+
+          // Show file label for selected node
+          if (node.userData.labelElement) {
+            node.userData.labelElement.style.display = "block";
+          }
+
+          // Show file info
+          const fileInfo = document.getElementById("file-info");
+          const fileName = document.getElementById("file-name");
+          const fileDeps = document.getElementById("file-deps");
+
+          fileName.textContent = node.userData.fileName;
+          fileDeps.textContent = `Dependencies: ${
+            this.getNodeDependencies(node.userData.fileName).length
+          }`;
+          fileInfo.style.display = "block";
+        }
+
+        deselectNode() {
+          if (this.selectedNode) {
+            this.selectedNode.material.emissive.setHex(0x000000);
+            // Hide file label
+            if (this.selectedNode.userData.labelElement) {
+              this.selectedNode.userData.labelElement.style.display = "none";
+            }
+            this.selectedNode = null;
+          }
+          document.getElementById("file-info").style.display = "none";
+          // For now, return empty array
+          return [];
+        }
+
+        onKeyDown(event) {
+          // Toggle labels with Ctrl+I
+          if (event.ctrlKey && event.key === "i") {
+            event.preventDefault();
+            this.labelsVisible = !this.labelsVisible;
+            console.log(`Labels ${this.labelsVisible ? "shown" : "hidden"}`);
+          }
+        }
+
+        animate() {
+          requestAnimationFrame(() => this.animate());
+          this.updateLabels(); // Update HTML label positions
+          this.renderer.render(this.scene, this.camera);
+        }
+      }
+
+      // Initialize the visualizer when the page loads
+      window.addEventListener("load", () => {
+        new DependencyGraphVisualizer();
+      });
+    </script>
+  </body>
+</html>

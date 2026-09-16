@@ -4,8 +4,13 @@ import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 
+interface FileDependencies {
+  value: string[];
+  types: string[];
+}
+
 interface DependencyGraph {
-  [file: string]: string[];
+  [file: string]: FileDependencies;
 }
 
 class TypeScriptDependencyBuilder {
@@ -49,7 +54,7 @@ class TypeScriptDependencyBuilder {
     return files;
   }
 
-  private extractDependencies(filePath: string): string[] {
+  private extractDependencies(filePath: string): FileDependencies {
     const sourceFile = ts.createSourceFile(
       filePath,
       fs.readFileSync(filePath, "utf-8"),
@@ -57,7 +62,8 @@ class TypeScriptDependencyBuilder {
       true
     );
 
-    const dependencies: string[] = [];
+    const valueTargets = new Set<string>();
+    const typeTargets = new Set<string>();
 
     const visit = (node: ts.Node) => {
       if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -66,7 +72,9 @@ class TypeScriptDependencyBuilder {
           if (this.isRelativeImport(moduleName)) {
             const resolvedPath = this.resolveImportPath(filePath, moduleName);
             if (resolvedPath) {
-              dependencies.push(resolvedPath);
+              const { hasValue, hasType } = this.classifyImport(node);
+              if (hasValue) valueTargets.add(resolvedPath);
+              if (hasType) typeTargets.add(resolvedPath);
             }
           }
         }
@@ -76,7 +84,61 @@ class TypeScriptDependencyBuilder {
     };
 
     visit(sourceFile);
-    return dependencies;
+    return {
+      value: Array.from(valueTargets),
+      types: Array.from(typeTargets),
+    };
+  }
+
+  // A single import/export declaration can carry both value and type-only
+  // bindings at once (e.g. `import { type A, b } from "./x"`), so this
+  // reports both flags for the declaration rather than picking just one.
+  private classifyImport(
+    node: ts.ImportDeclaration | ts.ExportDeclaration
+  ): { hasValue: boolean; hasType: boolean } {
+    let hasValue = false;
+    let hasType = false;
+
+    if (ts.isImportDeclaration(node)) {
+      const clause = node.importClause;
+      if (!clause) {
+        // Side-effect import: `import "./x"` - always a value-level edge.
+        return { hasValue: true, hasType: false };
+      }
+      if (clause.isTypeOnly) {
+        // `import type ... from "./x"` - the whole declaration is type-only,
+        // even if it has multiple named bindings.
+        return { hasValue: false, hasType: true };
+      }
+      if (clause.name) hasValue = true; // default import
+      if (clause.namedBindings) {
+        if (ts.isNamespaceImport(clause.namedBindings)) {
+          hasValue = true; // `import * as ns from "./x"`
+        } else {
+          for (const el of clause.namedBindings.elements) {
+            if (el.isTypeOnly) hasType = true;
+            else hasValue = true;
+          }
+        }
+      }
+    } else {
+      // Re-export: `export { ... } from "./x"` / `export * from "./x"`
+      if (node.isTypeOnly) {
+        return { hasValue: false, hasType: true };
+      }
+      if (!node.exportClause || ts.isNamespaceExport(node.exportClause)) {
+        hasValue = true; // `export * from "./x"` / `export * as ns from "./x"`
+      } else {
+        for (const el of node.exportClause.elements) {
+          if (el.isTypeOnly) hasType = true;
+          else hasValue = true;
+        }
+      }
+    }
+
+    // Defensive fallback for any declaration shape not covered above.
+    if (!hasValue && !hasType) hasValue = true;
+    return { hasValue, hasType };
   }
 
   private isRelativeImport(moduleName: string): boolean {
@@ -129,8 +191,11 @@ class TypeScriptDependencyBuilder {
     console.log("=================");
     for (const [file, deps] of Object.entries(this.graph)) {
       console.log(`${path.relative(this.rootDir, file)}:`);
-      deps.forEach((dep) => {
+      deps.value.forEach((dep) => {
         console.log(`  -> ${path.relative(this.rootDir, dep)}`);
+      });
+      deps.types.forEach((dep) => {
+        console.log(`  -> ${path.relative(this.rootDir, dep)} (type)`);
       });
       console.log();
     }
@@ -141,9 +206,10 @@ class TypeScriptDependencyBuilder {
     const relativeGraph: DependencyGraph = {};
     for (const [file, deps] of Object.entries(this.graph)) {
       const relativeFile = path.relative(this.rootDir, file);
-      relativeGraph[relativeFile] = deps.map((dep) =>
-        path.relative(this.rootDir, dep)
-      );
+      relativeGraph[relativeFile] = {
+        value: deps.value.map((dep) => path.relative(this.rootDir, dep)),
+        types: deps.types.map((dep) => path.relative(this.rootDir, dep)),
+      };
     }
     fs.writeFileSync(outputPath, JSON.stringify(relativeGraph, null, 2));
   }
