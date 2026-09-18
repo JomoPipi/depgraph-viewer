@@ -813,7 +813,55 @@
             } else {
               const nodeIds = Array.from(visibleNodes.keys());
               const { sccOf, sccSizes } = computeSCCs(nodeIds, edges);
-              inMultiScc = (id) => sccSizes[sccOf.get(id)] > 1;
+              const inMultiSccCurrent = (id) => sccSizes[sccOf.get(id)] > 1;
+
+              // Sticky propagation: if collapsing an expanded ancestor folder
+              // back down would make THAT folder look cyclic, its contents
+              // should keep showing as cyclic once you expand it too -
+              // otherwise a node's "in a cycle" status flickers on/off purely
+              // because of how deep you've drilled in, which reads as a bug
+              // even though each individual computation is "correct" for its
+              // own granularity. Cached per folder id since many visible
+              // nodes share the same ancestors.
+              const ancestorCycleCache = new Map();
+              function ancestorWouldBeCyclic(folderId) {
+                if (ancestorCycleCache.has(folderId)) {
+                  return ancestorCycleCache.get(folderId);
+                }
+                const trialExpanded = new Set(
+                  Array.from(expanded).filter(
+                    (id) => id !== folderId && !id.startsWith(folderId + "/"),
+                  ),
+                );
+                const trial = computeVisible(root, trialExpanded);
+                const trialEdges = buildEdges(
+                  fileMap,
+                  trial.leafToVisible,
+                  hideTypeOnly,
+                );
+                const { sccOf: tSccOf, sccSizes: tSccSizes } = computeSCCs(
+                  Array.from(trial.visibleNodes.keys()),
+                  trialEdges,
+                );
+                const result = tSccSizes[tSccOf.get(folderId)] > 1;
+                ancestorCycleCache.set(folderId, result);
+                return result;
+              }
+
+              inMultiScc = (id) => {
+                if (inMultiSccCurrent(id)) return true;
+                let ancestor = visibleNodes.get(id).node.parent;
+                while (ancestor && ancestor.path !== "") {
+                  if (
+                    expanded.has(ancestor.id) &&
+                    ancestorWouldBeCyclic(ancestor.id)
+                  ) {
+                    return true;
+                  }
+                  ancestor = ancestor.parent;
+                }
+                return false;
+              };
             }
 
             let nodeEntries = Array.from(visibleNodes.entries());
