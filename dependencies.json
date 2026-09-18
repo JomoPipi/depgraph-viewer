@@ -140,7 +140,6 @@
   "main.ts": {
     "value": [
       "ui-setup/internal.ts",
-      "workbench-tools/scale-utils/internal.ts",
       "workbench-tools/output-visualizer/internal.ts",
       "nunigraph/init.ts",
       "nunigraph/graph-tests/combinatorialExplosionTest.ts"
@@ -646,7 +645,7 @@
   "share-project/SampleMapping.ts": {
     "value": [],
     "types": [
-      "share-project/compactRecipeCodec.ts"
+      "workbench-tools/sample-library/codec/compactRecipeCodec.ts"
     ]
   },
   "share-project/applySampleMappings.ts": {
@@ -654,20 +653,11 @@
       "workbench-tools/sample-library/SampleLibrary.ts",
       "workbench-tools/sample-library/helpers/getRecipeWithDefaults.ts",
       "workbench-tools/sample-library/helpers/getSampleContent.ts",
-      "share-project/compactRecipeCodec.ts",
+      "workbench-tools/sample-library/codec/compactRecipeCodec.ts",
       "share-project/getBufferFromSampleBytes.ts"
     ],
     "types": [
       "share-project/SampleMapping.ts"
-    ]
-  },
-  "share-project/compactRecipeCodec.ts": {
-    "value": [],
-    "types": [
-      "workbench-tools/sample-library/types/ChainNode.ts",
-      "workbench-tools/sample-library/chain-ops/chainOps.ts",
-      "workbench-tools/sample-library/types/CompactRecipe.ts",
-      "workbench-tools/sample-library/types/RecipeLayer.ts"
     ]
   },
   "share-project/confirmSavingSharedSamples.ts": {
@@ -686,25 +676,9 @@
       "share-project/SampleMapping.ts"
     ]
   },
-  "share-project/getChannelPCM.ts": {
-    "value": [],
-    "types": []
-  },
-  "share-project/getCompactRecipe.ts": {
-    "value": [
-      "workbench-tools/sample-library/helpers/LAYER_DEFAULTS.ts",
-      "workbench-tools/sample-library/helpers/isSampleRecipe.ts"
-    ],
-    "types": [
-      "workbench-tools/sample-library/types/ChainNode.ts",
-      "workbench-tools/sample-library/types/CompactRecipe.ts",
-      "workbench-tools/sample-library/types/RecipeLayer.ts",
-      "workbench-tools/sample-library/types/SampleRecipe.ts"
-    ]
-  },
   "share-project/getSampleBytes.ts": {
     "value": [
-      "share-project/getChannelPCM.ts"
+      "workbench-tools/sample-library/helpers/getChannelPCM.ts"
     ],
     "types": [
       "share-project/SampleMapping.ts"
@@ -714,9 +688,9 @@
     "value": [
       "workbench-tools/sample-library/SampleLibrary.ts",
       "workbench-tools/sample-library/helpers/isRecipeForm.ts",
-      "share-project/getSampleBytes.ts",
-      "share-project/compactRecipeCodec.ts",
-      "share-project/getCompactRecipe.ts"
+      "workbench-tools/sample-library/codec/getCompactRecipe.ts",
+      "workbench-tools/sample-library/codec/compactRecipeCodec.ts",
+      "share-project/getSampleBytes.ts"
     ],
     "types": [
       "share-project/SampleMapping.ts"
@@ -764,6 +738,23 @@
     "types": []
   },
   "storage/sampleDB.ts": {
+    "value": [],
+    "types": []
+  },
+  "theme/Theme.ts": {
+    "value": [
+      "ui-library/functions/mixRGB.ts",
+      "theme/palettes.ts"
+    ],
+    "types": []
+  },
+  "theme/initTheme.ts": {
+    "value": [
+      "theme/Theme.ts"
+    ],
+    "types": []
+  },
+  "theme/palettes.ts": {
     "value": [],
     "types": []
   },
@@ -1012,12 +1003,6 @@
     "value": [],
     "types": []
   },
-  "ui-setup/Theme.ts": {
-    "value": [
-      "ui-library/functions/mixRGB.ts"
-    ],
-    "types": []
-  },
   "ui-setup/add-resize-listener.ts": {
     "value": [
       "nunigraph/controller/GraphController.ts"
@@ -1033,10 +1018,11 @@
       "ui-library/functions/windowZIndex.ts",
       "dispatch/CommandType.ts",
       "share-project/shareProjectViaURL.ts",
+      "share-project/keepSharedSample.ts",
       "collab/openCollabPanel.ts",
       "workbench-tools/sample-library/openSampleLibraryWindow.ts",
       "ui-library/components/value-setters/createRadioButtonGroup.ts",
-      "ui-setup/Theme.ts"
+      "theme/Theme.ts"
     ],
     "types": []
   },
@@ -1049,18 +1035,17 @@
   },
   "ui-setup/connect-welcome-container.ts": {
     "value": [
-      "ui-library/functions/windowZIndex.ts",
-      "ui-library/events/pageGroupify.ts"
+      "ui-library/functions/windowZIndex.ts"
     ],
     "types": []
   },
   "ui-setup/internal.ts": {
     "value": [
-      "ui-setup/Theme.ts",
       "ui-setup/add-resize-listener.ts",
       "ui-setup/connect-menu-items.ts",
       "ui-setup/connect-volume-warning.ts",
-      "ui-setup/connect-welcome-container.ts"
+      "ui-setup/connect-welcome-container.ts",
+      "theme/initTheme.ts"
     ],
     "types": []
   },
@@ -1491,9 +1476,11 @@
   "webaudio2/nodes/poly-keyboard-bundle/createKeyboardOptionsWindow.ts": {
     "value": [
       "ui-library/functions/windowZIndex.ts",
-      "webaudio2/note-in/KB.ts",
-      "workbench-tools/scale-utils/scalePresets.ts",
-      "ui-library/components/createDraggableWindow.ts"
+      "webaudio2/scales/scalePresets.ts",
+      "ui-library/components/createDraggableWindow.ts",
+      "webaudio2/scales/formulas/createDeltaExpressionScale.ts",
+      "webaudio2/scales/formulas/createScaleFromCSV.ts",
+      "webaudio2/scales/formulas/createEqualTemperamentScale.ts"
     ],
     "types": []
   },
@@ -1658,6 +1645,37 @@
       "webaudio2/sample-refs/SampleRefState.ts"
     ]
   },
+  "webaudio2/scales/formulas/createDeltaExpressionScale.ts": {
+    "value": [
+      "webaudio2/note-in/KB.ts",
+      "webaudio2/scales/playScalePreview.ts"
+    ],
+    "types": []
+  },
+  "webaudio2/scales/formulas/createEqualTemperamentScale.ts": {
+    "value": [
+      "webaudio2/note-in/KB.ts",
+      "webaudio2/scales/playScalePreview.ts"
+    ],
+    "types": []
+  },
+  "webaudio2/scales/formulas/createScaleFromCSV.ts": {
+    "value": [
+      "webaudio2/note-in/KB.ts",
+      "webaudio2/scales/playScalePreview.ts"
+    ],
+    "types": []
+  },
+  "webaudio2/scales/playScalePreview.ts": {
+    "value": [
+      "webaudio2/note-in/KB.ts"
+    ],
+    "types": []
+  },
+  "webaudio2/scales/scalePresets.ts": {
+    "value": [],
+    "types": []
+  },
   "webaudio2/scheduling-core/MasterClock.ts": {
     "value": [
       "dispatch/CommandType.ts",
@@ -1774,16 +1792,16 @@
   "workbench-tools/sample-library/SampleLibrary.ts": {
     "value": [
       "audio-context/audioCtx.ts",
+      "ui-library/components/sendNotificationBox.ts",
+      "storage/sampleDB.ts",
       "workbench-tools/sample-library/constants/ENGINE_VERSION.ts",
       "workbench-tools/sample-library/engine/foldRecipeToChannels.ts",
       "workbench-tools/sample-library/helpers/getStoredPayload.ts",
       "workbench-tools/sample-library/helpers/isStoredMeta.ts",
-      "ui-library/components/sendNotificationBox.ts",
       "workbench-tools/sample-library/helpers/getContentHash.ts",
       "workbench-tools/sample-library/helpers/getSampleContent.ts",
       "workbench-tools/sample-library/helpers/isSameContent.ts",
-      "workbench-tools/sample-library/helpers/defaultSamples.ts",
-      "storage/sampleDB.ts"
+      "workbench-tools/sample-library/helpers/defaultSamples.ts"
     ],
     "types": [
       "workbench-tools/sample-library/types/SampleAudio.ts",
@@ -1796,7 +1814,6 @@
       "ui-library/components/askForText.ts",
       "ui-library/components/SampleRosterList.ts",
       "ui-library/components/sendConfirmationBox.ts",
-      "share-project/keepSharedSample.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
       "workbench-tools/sample-library/waveform-worker/BufferRenderProxy.ts",
       "workbench-tools/sample-library/engine/importAudioFiles.ts",
@@ -2042,6 +2059,27 @@
       "workbench-tools/sample-library/chain-ops/ChainOp.ts"
     ]
   },
+  "workbench-tools/sample-library/codec/compactRecipeCodec.ts": {
+    "value": [],
+    "types": [
+      "workbench-tools/sample-library/types/ChainNode.ts",
+      "workbench-tools/sample-library/chain-ops/chainOps.ts",
+      "workbench-tools/sample-library/types/CompactRecipe.ts",
+      "workbench-tools/sample-library/types/RecipeLayer.ts"
+    ]
+  },
+  "workbench-tools/sample-library/codec/getCompactRecipe.ts": {
+    "value": [
+      "workbench-tools/sample-library/helpers/LAYER_DEFAULTS.ts",
+      "workbench-tools/sample-library/helpers/isSampleRecipe.ts"
+    ],
+    "types": [
+      "workbench-tools/sample-library/types/ChainNode.ts",
+      "workbench-tools/sample-library/types/CompactRecipe.ts",
+      "workbench-tools/sample-library/types/RecipeLayer.ts",
+      "workbench-tools/sample-library/types/SampleRecipe.ts"
+    ]
+  },
   "workbench-tools/sample-library/constants/BAKE_THRESHOLD_MS.ts": {
     "value": [],
     "types": []
@@ -2208,7 +2246,7 @@
   "workbench-tools/sample-library/editor/SampleEditorWaveformRenderer.ts": {
     "value": [
       "ui-library/functions/sizeCanvasForDpr.ts",
-      "ui-setup/Theme.ts",
+      "theme/Theme.ts",
       "workbench-tools/sample-library/editor/peakCache.ts"
     ],
     "types": [
@@ -2789,6 +2827,10 @@
       "workbench-tools/sample-library/types/SampleRange.ts"
     ]
   },
+  "workbench-tools/sample-library/helpers/getChannelPCM.ts": {
+    "value": [],
+    "types": []
+  },
   "workbench-tools/sample-library/helpers/getContentHash.ts": {
     "value": [],
     "types": []
@@ -2818,9 +2860,9 @@
   },
   "workbench-tools/sample-library/helpers/getSampleContent.ts": {
     "value": [
-      "share-project/compactRecipeCodec.ts",
-      "share-project/getChannelPCM.ts",
-      "share-project/getCompactRecipe.ts",
+      "workbench-tools/sample-library/codec/compactRecipeCodec.ts",
+      "workbench-tools/sample-library/codec/getCompactRecipe.ts",
+      "workbench-tools/sample-library/helpers/getChannelPCM.ts",
       "workbench-tools/sample-library/helpers/isRecipeForm.ts"
     ],
     "types": [
@@ -2925,8 +2967,8 @@
     "value": [
       "ui-library/components/createDraggableWindow.ts",
       "ui-library/functions/withWaitCursor.ts",
-      "workbench-tools/sample-library/SampleLibrary.ts",
       "ui-library/functions/bringToFront.ts",
+      "workbench-tools/sample-library/SampleLibrary.ts",
       "workbench-tools/sample-library/editor/SampleEditorPanel.ts",
       "workbench-tools/sample-library/SampleLibraryPanel.ts",
       "workbench-tools/sample-library/editor/SampleFormulaWindow.ts",
@@ -2936,17 +2978,17 @@
   },
   "workbench-tools/sample-library/openSamplePicker.ts": {
     "value": [
-      "workbench-tools/sample-library/SampleLibrary.ts",
       "ui-library/components/openFloatingModal.ts",
-      "ui-library/components/SampleRosterList.ts"
+      "ui-library/components/SampleRosterList.ts",
+      "workbench-tools/sample-library/SampleLibrary.ts"
     ],
     "types": []
   },
   "workbench-tools/sample-library/openSampleRecorder.ts": {
     "value": [
-      "workbench-tools/sample-library/SampleLibrary.ts",
       "ui-library/components/sendNotificationBox.ts",
       "ui-library/components/openFloatingModal.ts",
+      "workbench-tools/sample-library/SampleLibrary.ts",
       "workbench-tools/sample-library/engine/startRecording.ts",
       "workbench-tools/sample-library/helpers/getNextRecordingName.ts"
     ],
@@ -2958,7 +3000,7 @@
     "value": [
       "ui-library/functions/sizeCanvasForDpr.ts",
       "ui-library/events/doUntilMouseUp.ts",
-      "ui-setup/Theme.ts",
+      "theme/Theme.ts",
       "workbench-tools/sample-library/playback/previewVolume.ts"
     ],
     "types": []
@@ -3024,7 +3066,8 @@
   "workbench-tools/sample-library/types/RecipeLayer.ts": {
     "value": [],
     "types": [
-      "workbench-tools/sample-library/editor/SampleDraft.ts"
+      "workbench-tools/sample-library/types/ChainNode.ts",
+      "workbench-tools/sample-library/types/LayerMixer.ts"
     ]
   },
   "workbench-tools/sample-library/types/RecipeResolver.ts": {
@@ -3063,52 +3106,6 @@
     "value": [
       "ui-library/functions/drawWaveform.ts"
     ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/create-scale-builder-ui.ts": {
-    "value": [
-      "workbench-tools/scale-utils/formulas/setScaleFromCSV.ts",
-      "workbench-tools/scale-utils/formulas/setEqualTemperamentScale.ts",
-      "workbench-tools/scale-utils/formulas/setDeltaExpressionScale.ts",
-      "workbench-tools/scale-utils/scalePresets.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/formulas/setDeltaExpressionScale.ts": {
-    "value": [
-      "webaudio2/note-in/KB.ts",
-      "workbench-tools/scale-utils/playScalePreview.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/formulas/setEqualTemperamentScale.ts": {
-    "value": [
-      "webaudio2/note-in/KB.ts",
-      "workbench-tools/scale-utils/playScalePreview.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/formulas/setScaleFromCSV.ts": {
-    "value": [
-      "webaudio2/note-in/KB.ts",
-      "workbench-tools/scale-utils/playScalePreview.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/internal.ts": {
-    "value": [
-      "workbench-tools/scale-utils/create-scale-builder-ui.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/playScalePreview.ts": {
-    "value": [
-      "webaudio2/note-in/KB.ts"
-    ],
-    "types": []
-  },
-  "workbench-tools/scale-utils/scalePresets.ts": {
-    "value": [],
     "types": []
   },
   "workbench-tools/waveform-utils/WaveformUtils.ts": {
