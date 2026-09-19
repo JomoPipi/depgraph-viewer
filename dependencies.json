@@ -31,7 +31,6 @@
   "dispatch/commandMap.ts": {
     "value": [
       "dispatch/CommandType.ts",
-      "dispatch/commands/ModifyGraphCommand.ts",
       "dispatch/commands/SetValueCommand.ts",
       "dispatch/commands/CallFunctionCommand.ts"
     ],
@@ -39,17 +38,13 @@
       "dispatch/Command.ts"
     ]
   },
-  "dispatch/commandTargets.ts": {
+  "dispatch/commandRoot.ts": {
     "value": [],
-    "types": [
-      "nunigraph/controller/NuniGraphController.ts",
-      "workbench-tools/sample-library/types/ChainNode.ts",
-      "workbench-tools/sample-library/types/LayerMixer.ts"
-    ]
+    "types": []
   },
   "dispatch/commands/CallFunctionCommand.ts": {
     "value": [
-      "dispatch/commandTargets.ts"
+      "dispatch/commandRoot.ts"
     ],
     "types": [
       "dispatch/Command.ts"
@@ -66,20 +61,9 @@
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts"
     ]
   },
-  "dispatch/commands/ModifyGraphCommand.ts": {
-    "value": [
-      "nunigraph/controller/utils/getController.ts",
-      "nunigraph/controller/utils/getAdjacentEdges.ts"
-    ],
-    "types": [
-      "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/model/NuniGraph.ts",
-      "dispatch/Command.ts"
-    ]
-  },
   "dispatch/commands/SetValueCommand.ts": {
     "value": [
-      "dispatch/commandTargets.ts"
+      "dispatch/commandRoot.ts"
     ],
     "types": [
       "dispatch/Command.ts"
@@ -92,10 +76,18 @@
       "dispatch/commands/types/CommandParametersFor.ts"
     ]
   },
+  "dispatch/commands/types/CommandParameterMap.ts": {
+    "value": [],
+    "types": [
+      "dispatch/CommandType.ts",
+      "dispatch/commands/SetValueCommand.ts",
+      "dispatch/commands/CallFunctionCommand.ts"
+    ]
+  },
   "dispatch/commands/types/CommandParametersFor.ts": {
     "value": [],
     "types": [
-      "dispatch/commandMap.ts",
+      "dispatch/commands/types/CommandParameterMap.ts",
       "dispatch/CommandType.ts",
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts"
     ]
@@ -111,7 +103,6 @@
       "dispatch/commands/ExecuteCommandCommand.ts"
     ],
     "types": [
-      "nunigraph/controller/NuniGraphController.ts",
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts",
       "dispatch/CommandType.ts",
       "dispatch/commands/types/CommandParametersFor.ts",
@@ -145,6 +136,18 @@
       "nunigraph/graph-tests/combinatorialExplosionTest.ts"
     ],
     "types": []
+  },
+  "nunigraph/commands/ModifyGraphCommand.ts": {
+    "value": [
+      "nunigraph/controller/utils/getController.ts",
+      "nunigraph/controller/utils/getAdjacentEdges.ts"
+    ],
+    "types": [
+      "nunigraph/controller/NuniGraphController.ts",
+      "nunigraph/model/NuniGraph.ts",
+      "dispatch/Command.ts",
+      "dispatch/CommandType.ts"
+    ]
   },
   "nunigraph/controller/GraphController.ts": {
     "value": [
@@ -185,6 +188,7 @@
       "nunigraph/controller/graph-operations/getPasteNodesCommands.ts",
       "nunigraph/controller/event-handling/GraphLabelType.ts",
       "nunigraph/controller/utils/getSampleHostNodes.ts",
+      "nunigraph/controller/openGraphControllers.ts",
       "nunigraph/controller/utils/getReferencedSampleIds.ts"
     ],
     "types": [
@@ -234,7 +238,7 @@
   },
   "nunigraph/controller/event-handling/getControllerFromEventTarget.ts": {
     "value": [
-      "dispatch/dispatcher.ts"
+      "nunigraph/controller/openGraphControllers.ts"
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts"
@@ -258,6 +262,7 @@
       "nunigraph/controller/utils/getDestinationFromPortId.ts",
       "nunigraph/controller/utils/getNodesInBox.ts",
       "nunigraph/controller/MouseTracker.ts",
+      "nunigraph/controller/openGraphControllers.ts",
       "dispatch/commands/ExecuteCommandCommand.ts",
       "nunigraph/controller/utils/determinePortsToConnect.ts",
       "nunigraph/controller/graph-operations/getConnectPortsCommands.ts",
@@ -283,7 +288,6 @@
   "nunigraph/controller/graph-operations/expandNodePath.ts": {
     "value": [],
     "types": [
-      "dispatch/commandTargets.ts",
       "nunigraph/model/NuniGraphNode.ts",
       "nunigraph/controller/NuniGraphController.ts"
     ]
@@ -367,7 +371,7 @@
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts",
       "nunigraph/model/NuniGraphNode.ts",
       "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/controller/graph-operations/getModularizationCommands.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/graph-operations/getMapTransformCommand.ts": {
@@ -422,7 +426,7 @@
     "types": [
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts",
       "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/controller/graph-operations/getModularizationCommands.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/graph-operations/getReproduceSubgraphCommands.ts": {
@@ -434,7 +438,7 @@
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts",
       "nunigraph/model/NuniGraphNode.ts",
       "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/controller/graph-operations/getModularizationCommands.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/graph-operations/getSetNodeValueCommand.ts": {
@@ -447,6 +451,18 @@
   "nunigraph/controller/nativeModules.ts": {
     "value": [],
     "types": []
+  },
+  "nunigraph/controller/openGraphControllers.ts": {
+    "value": [],
+    "types": [
+      "nunigraph/controller/NuniGraphController.ts"
+    ]
+  },
+  "nunigraph/controller/topController.ts": {
+    "value": [],
+    "types": [
+      "nunigraph/controller/NuniGraphController.ts"
+    ]
   },
   "nunigraph/controller/utils/determinePortsToConnect.ts": {
     "value": [
@@ -464,18 +480,18 @@
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts",
-      "dispatch/commands/ModifyGraphCommand.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/utils/getConnectionsToPort.ts": {
     "value": [],
     "types": [
-      "nunigraph/controller/graph-operations/getModularizationCommands.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/utils/getController.ts": {
     "value": [
-      "dispatch/commandTargets.ts"
+      "nunigraph/controller/topController.ts"
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts",
@@ -510,7 +526,7 @@
   "nunigraph/controller/utils/mergeDestinations.ts": {
     "value": [],
     "types": [
-      "nunigraph/controller/graph-operations/getModularizationCommands.ts"
+      "nunigraph/model/NuniGraph.ts"
     ]
   },
   "nunigraph/controller/utils/serializeNode.ts": {
@@ -552,13 +568,18 @@
       "webaudio2/nodes/nuni-graph-audio-node/NuniGraphAudioNode.ts",
       "workbench-tools/waveform-utils/WaveformUtils.ts",
       "dispatch/dispatcher.ts",
-      "dispatch/commandTargets.ts",
+      "dispatch/commandRoot.ts",
       "webaudio2/scheduling-core/MasterClock.ts",
       "workbench-tools/sample-library/engine/validateChainOps.ts",
       "webaudio2/loadAudioWorklet.ts",
       "share-project/loadProjectFromURL.ts",
+      "dispatch/commandMap.ts",
+      "dispatch/CommandType.ts",
       "nunigraph/controller/event-handling/handleEvents.ts",
       "nunigraph/controller/GraphController.ts",
+      "nunigraph/controller/openGraphControllers.ts",
+      "nunigraph/controller/topController.ts",
+      "nunigraph/commands/ModifyGraphCommand.ts",
       "nunigraph/controller/NuniGraphController.ts",
       "nunigraph/controller/utils/yieldNodesFiltered.ts"
     ],
@@ -699,7 +720,7 @@
   "share-project/keepSharedSample.ts": {
     "value": [
       "workbench-tools/sample-library/SampleLibrary.ts",
-      "dispatch/commandTargets.ts",
+      "nunigraph/controller/topController.ts",
       "nunigraph/controller/utils/getSampleHostNodes.ts",
       "nunigraph/controller/utils/getReferencedSampleIds.ts",
       "ui-library/functions/withWaitCursor.ts"
@@ -708,7 +729,7 @@
   },
   "share-project/loadProjectFromURL.ts": {
     "value": [
-      "dispatch/commandTargets.ts",
+      "nunigraph/controller/topController.ts",
       "webaudio2/scheduling-core/MasterClock.ts",
       "nunigraph/serialization/compactGraphCodec.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
@@ -720,7 +741,7 @@
   },
   "share-project/shareProjectViaURL.ts": {
     "value": [
-      "dispatch/commandTargets.ts",
+      "nunigraph/controller/topController.ts",
       "ui-library/components/sendNotificationBox.ts",
       "webaudio2/scheduling-core/MasterClock.ts",
       "nunigraph/serialization/compactGraphCodec.ts",
@@ -737,6 +758,10 @@
     "value": [],
     "types": []
   },
+  "storage/Preferences.ts": {
+    "value": [],
+    "types": []
+  },
   "storage/sampleDB.ts": {
     "value": [],
     "types": []
@@ -744,12 +769,14 @@
   "theme/Theme.ts": {
     "value": [
       "ui-library/functions/mixRGB.ts",
+      "storage/Preferences.ts",
       "theme/palettes.ts"
     ],
     "types": []
   },
   "theme/initTheme.ts": {
     "value": [
+      "storage/Preferences.ts",
       "theme/Theme.ts"
     ],
     "types": []
@@ -1335,7 +1362,6 @@
   },
   "webaudio2/nodes/nuni-graph-audio-node/NuniGraphAudioNode.ts": {
     "value": [
-      "dispatch/dispatcher.ts",
       "ui-library/components/value-setters/createSelectionPrompt.ts",
       "webaudio2/BaseAudioNode.ts",
       "storage/ModuleStorage.ts",
@@ -1345,6 +1371,7 @@
       "workbench-tools/sample-library/SampleLibrary.ts",
       "nunigraph/controller/utils/getSampleHostNodes.ts",
       "nunigraph/controller/utils/getReferencedSampleIds.ts",
+      "nunigraph/controller/openGraphControllers.ts",
       "share-project/confirmSavingSharedSamples.ts"
     ],
     "types": [
@@ -2157,9 +2184,16 @@
       "workbench-tools/sample-library/engine/NestedRecipeFolder.ts"
     ]
   },
+  "workbench-tools/sample-library/editor/SampleEditTarget.ts": {
+    "value": [],
+    "types": [
+      "workbench-tools/sample-library/types/ChainNode.ts",
+      "workbench-tools/sample-library/types/LayerMixer.ts"
+    ]
+  },
   "workbench-tools/sample-library/editor/SampleEditorController.ts": {
     "value": [
-      "dispatch/commandTargets.ts",
+      "dispatch/commandRoot.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
       "audio-context/audioCtx.ts",
       "ui-library/components/askForText.ts",
@@ -2210,6 +2244,7 @@
       "workbench-tools/sample-library/types/SampleRecipe.ts",
       "workbench-tools/sample-library/types/SampleRange.ts",
       "workbench-tools/sample-library/types/SampleEditHost.ts",
+      "workbench-tools/sample-library/editor/SampleEditTarget.ts",
       "workbench-tools/sample-library/editor/openSampleEditorContextMenu.ts",
       "workbench-tools/sample-library/editor/SampleFormulaWindow.ts",
       "workbench-tools/sample-library/editor/nodeProvenance.ts",
