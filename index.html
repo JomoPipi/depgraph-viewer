@@ -290,9 +290,8 @@
         </div>
         <div style="margin-top: 6px; color: var(--muted)">
           Click a <span style="color: var(--folder)">folder</span> to expand it.
-          Click a dashed cluster box (or its label) to collapse it back.
-          Dashed arrows are type-only imports. Right-click a node for more
-          options.
+          Click a dashed cluster box (or its label) to collapse it back. Dashed
+          arrows are type-only imports. Right-click a node for more options.
         </div>
 
         <div class="hud-control-row" id="hidden-row" style="display: none">
@@ -336,6 +335,11 @@
         </label>
 
         <button id="reset-btn">Collapse all</button>
+        <button id="arrange-exact-btn">Auto-arrange: min crossings</button>
+        <div
+          id="arrange-status"
+          style="margin-top: 6px; color: var(--muted); font-size: 11px"
+        ></div>
       </div>
       <div id="breadcrumb" style="display: none"></div>
       <div id="context-menu" class="context-menu" style="display: none">
@@ -653,6 +657,293 @@
         }
 
         // ---------------------------------------------------------------
+        // 2b. Auto-arrange: layered layout that minimizes edge crossings.
+        //
+        // Nodes are assigned a row ("layer") by dependency depth - nothing
+        // imports a layer-0 node (e.g. an entry point), while a node that
+        // imports nothing sits in the deepest layer it can reach (e.g. a
+        // leaf utility module) - then, for a fixed set of layers, we search
+        // for the left-to-right order within each layer that minimizes the
+        // total number of edge crossings.
+        //
+        // The true minimum crossing number of an arbitrary graph is
+        // NP-hard to compute in general, but for a small graph laid out on
+        // a small number of rows, brute-forcing every combination of
+        // per-row orderings is completely tractable (the search space is
+        // the product of each row's factorial, not the whole graph's), so
+        // we do that whenever it's cheap enough and only fall back to a
+        // bounded local search when it isn't.
+        // ---------------------------------------------------------------
+
+        // Longest-path layering: layer(v) = 1 + max(layer(u)) over every
+        // edge u->v, computed via Kahn's algorithm on the SCC condensation
+        // so a cyclic group of nodes (which can't be strictly ordered by
+        // "who imports whom") shares a single layer instead of crashing
+        // into an infinite regress.
+        function assignLayers(nodeIds, edges) {
+          const { sccOf, sccSizes } = computeSCCs(nodeIds, edges);
+          const sccCount = sccSizes.length;
+          const condAdj = Array.from({ length: sccCount }, () => new Set());
+          const indeg = new Array(sccCount).fill(0);
+          for (const e of edges) {
+            const a = sccOf.get(e.source);
+            const b = sccOf.get(e.target);
+            if (a !== b && !condAdj[a].has(b)) {
+              condAdj[a].add(b);
+              indeg[b]++;
+            }
+          }
+          const sccLayer = new Array(sccCount).fill(0);
+          const queue = [];
+          const remaining = indeg.slice();
+          for (let i = 0; i < sccCount; i++) {
+            if (remaining[i] === 0) queue.push(i);
+          }
+          for (let head = 0; head < queue.length; head++) {
+            const u = queue[head];
+            for (const v of condAdj[u]) {
+              sccLayer[v] = Math.max(sccLayer[v], sccLayer[u] + 1);
+              if (--remaining[v] === 0) queue.push(v);
+            }
+          }
+          const layerOf = new Map();
+          for (const id of nodeIds) layerOf.set(id, sccLayer[sccOf.get(id)]);
+          return layerOf;
+        }
+
+        function groupByLayer(nodeIds, layerOf) {
+          const byLayer = new Map();
+          for (const id of nodeIds) {
+            const L = layerOf.get(id);
+            if (!byLayer.has(L)) byLayer.set(L, []);
+            byLayer.get(L).push(id);
+          }
+          const maxLayer = byLayer.size ? Math.max(...byLayer.keys()) : -1;
+          const ordered = [];
+          for (let i = 0; i <= maxLayer; i++)
+            ordered.push(byLayer.get(i) || []);
+          return ordered;
+        }
+
+        function layoutCoords(layerArrays, spacingX, spacingY, topY) {
+          const pos = new Map();
+          layerArrays.forEach((arr, layerIdx) => {
+            const n = arr.length;
+            arr.forEach((id, orderIdx) => {
+              pos.set(id, {
+                x: (orderIdx - (n - 1) / 2) * spacingX,
+                y: topY + layerIdx * spacingY,
+              });
+            });
+          });
+          return pos;
+        }
+
+        // Orientation test for a proper segment-segment intersection, with
+        // a collinear-overlap fallback. Edge pairs sharing an endpoint are
+        // filtered out by the caller before this runs, since two edges
+        // meeting at their shared node is expected, not a crossing.
+        function orient(p, q, r) {
+          const val = (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+          if (Math.abs(val) < 1e-9) return 0;
+          return val > 0 ? 1 : -1;
+        }
+        function onSegment(p, q, r) {
+          return (
+            Math.min(p.x, r.x) - 1e-9 <= q.x &&
+            q.x <= Math.max(p.x, r.x) + 1e-9 &&
+            Math.min(p.y, r.y) - 1e-9 <= q.y &&
+            q.y <= Math.max(p.y, r.y) + 1e-9
+          );
+        }
+        function segmentsCross(a, b, c, d) {
+          const o1 = orient(a, b, c);
+          const o2 = orient(a, b, d);
+          const o3 = orient(c, d, a);
+          const o4 = orient(c, d, b);
+          if (o1 !== o2 && o3 !== o4) return true;
+          if (o1 === 0 && onSegment(a, c, b)) return true;
+          if (o2 === 0 && onSegment(a, d, b)) return true;
+          if (o3 === 0 && onSegment(c, a, d)) return true;
+          if (o4 === 0 && onSegment(c, b, d)) return true;
+          return false;
+        }
+
+        function countCrossings(edges, pos) {
+          let crossings = 0;
+          for (let i = 0; i < edges.length; i++) {
+            const e1 = edges[i];
+            const a = pos.get(e1.source);
+            const b = pos.get(e1.target);
+            for (let j = i + 1; j < edges.length; j++) {
+              const e2 = edges[j];
+              if (
+                e1.source === e2.source ||
+                e1.source === e2.target ||
+                e1.target === e2.source ||
+                e1.target === e2.target
+              ) {
+                continue;
+              }
+              const c = pos.get(e2.source);
+              const d = pos.get(e2.target);
+              if (segmentsCross(a, b, c, d)) crossings++;
+            }
+          }
+          return crossings;
+        }
+
+        function factorial(n) {
+          let f = 1;
+          for (let i = 2; i <= n; i++) f *= i;
+          return f;
+        }
+
+        function permutations(arr) {
+          if (arr.length <= 1) return [arr.slice()];
+          const result = [];
+          function backtrack(current, remaining) {
+            if (remaining.length === 0) {
+              result.push(current.slice());
+              return;
+            }
+            for (let i = 0; i < remaining.length; i++) {
+              current.push(remaining[i]);
+              backtrack(
+                current,
+                remaining.slice(0, i).concat(remaining.slice(i + 1)),
+              );
+              current.pop();
+            }
+          }
+          backtrack([], arr);
+          return result;
+        }
+
+        // A layer larger than this never gets its full factorial of
+        // permutations tried, even during the per-layer fallback below -
+        // instead it's searched via its current order plus a bounded batch
+        // of random shuffles, so one big row can't hang the browser.
+        const MAX_EXACT_LAYER_SIZE = 8;
+        const RANDOM_CANDIDATE_COUNT = 300;
+
+        function candidatePermutations(arr) {
+          if (factorial(arr.length) <= factorial(MAX_EXACT_LAYER_SIZE)) {
+            return permutations(arr);
+          }
+          const seen = new Set();
+          const candidates = [arr.slice()];
+          seen.add(arr.join(","));
+          for (
+            let i = 0;
+            i < RANDOM_CANDIDATE_COUNT &&
+            candidates.length < RANDOM_CANDIDATE_COUNT;
+            i++
+          ) {
+            const shuffled = arr.slice();
+            for (let k = shuffled.length - 1; k > 0; k--) {
+              const j = Math.floor(Math.random() * (k + 1));
+              [shuffled[k], shuffled[j]] = [shuffled[j], shuffled[k]];
+            }
+            const key = shuffled.join(",");
+            if (!seen.has(key)) {
+              seen.add(key);
+              candidates.push(shuffled);
+            }
+          }
+          return candidates;
+        }
+
+        // Ops budget for the fully joint search (product of every layer's
+        // permutation count, times a per-combination crossing-count cost).
+        // Below this, we get a provably global minimum; above it, we fall
+        // back to exact-per-layer coordinate descent - each single sweep
+        // step is still an exhaustive (or bounded-candidate) search, just
+        // not searched jointly across every layer at once.
+        const MAX_BRUTE_FORCE_OPS = 4_000_000;
+
+        function exactMinCrossingLayers(
+          layerArrays,
+          edges,
+          spacingX,
+          spacingY,
+          topY,
+        ) {
+          const evalCost = Math.max(1, edges.length * edges.length);
+          const perLayerPerms = layerArrays.map(candidatePermutations);
+          const totalCombos = perLayerPerms.reduce(
+            (p, perms) => p * perms.length,
+            1,
+          );
+          const fullSearchFeasible =
+            totalCombos * evalCost <= MAX_BRUTE_FORCE_OPS;
+          const exact =
+            fullSearchFeasible &&
+            layerArrays.every(
+              (arr) => factorial(arr.length) <= factorial(MAX_EXACT_LAYER_SIZE),
+            );
+
+          if (fullSearchFeasible) {
+            let best = null;
+            let bestCount = Infinity;
+            const chosen = [];
+            (function recurse(layerIdx) {
+              if (layerIdx === perLayerPerms.length) {
+                const count = countCrossings(
+                  edges,
+                  layoutCoords(chosen, spacingX, spacingY, topY),
+                );
+                if (count < bestCount) {
+                  bestCount = count;
+                  best = chosen.map((arr) => arr.slice());
+                }
+                return;
+              }
+              for (const perm of perLayerPerms[layerIdx]) {
+                chosen.push(perm);
+                recurse(layerIdx + 1);
+                chosen.pop();
+              }
+            })(0);
+            return { layers: best, crossings: bestCount, exact };
+          }
+
+          // Coordinate descent: repeatedly pick the best candidate order for
+          // one layer at a time, holding every other layer fixed, until a
+          // full sweep makes no further improvement (or a small iteration
+          // cap is hit).
+          let current = layerArrays.map((arr) => arr.slice());
+          let bestCount = countCrossings(
+            edges,
+            layoutCoords(current, spacingX, spacingY, topY),
+          );
+          let improved = true;
+          let iterations = 0;
+          while (improved && iterations < 12) {
+            improved = false;
+            iterations++;
+            for (let li = 0; li < current.length; li++) {
+              let bestPermForLayer = current[li];
+              for (const perm of perLayerPerms[li]) {
+                const trial = current.slice();
+                trial[li] = perm;
+                const count = countCrossings(
+                  edges,
+                  layoutCoords(trial, spacingX, spacingY, topY),
+                );
+                if (count < bestCount) {
+                  bestCount = count;
+                  bestPermForLayer = perm;
+                  improved = true;
+                }
+              }
+              current[li] = bestPermForLayer;
+            }
+          }
+          return { layers: current, crossings: bestCount, exact: false };
+        }
+
+        // ---------------------------------------------------------------
         // 3. Rendering + force simulation
         // ---------------------------------------------------------------
 
@@ -735,6 +1026,9 @@
           const edgeColor = d3.scaleOrdinal(EDGE_PALETTE);
           function edgeSourceId(d) {
             return typeof d.source === "object" ? d.source.id : d.source;
+          }
+          function edgeTargetId(d) {
+            return typeof d.target === "object" ? d.target.id : d.target;
           }
           function edgeMarkerUrl(d) {
             const color = edgeColor(edgeSourceId(d));
@@ -946,8 +1240,7 @@
 
             document.getElementById("stat-nodes").textContent =
               nodeEntries.length;
-            document.getElementById("stat-edges").textContent =
-              edgeList.length;
+            document.getElementById("stat-edges").textContent = edgeList.length;
             breadcrumbEl.textContent = expanded.size
               ? "Expanded: " + Array.from(expanded).join(", ")
               : "Showing top-level folders";
@@ -1402,6 +1695,60 @@
             render();
           });
 
+          // Lays out whatever's currently visible into rows by dependency
+          // depth, then pins every node (fx/fy) to the ordering within each
+          // row that minimizes edge crossings - exactly, when the search
+          // space is small enough, or the best a bounded local search finds
+          // otherwise. Pins stick until something else (drag, expand,
+          // toggling a filter) triggers a fresh render(), same as a manual
+          // drag would.
+          function autoArrangeExactMinCrossings() {
+            const statusEl = document.getElementById("arrange-status");
+            if (!simNodes.length) return;
+
+            const nodeIds = simNodes.map((n) => n.id);
+            const edges = simLinks.map((d) => ({
+              source: edgeSourceId(d),
+              target: edgeTargetId(d),
+            }));
+
+            const layerOf = assignLayers(nodeIds, edges);
+            const layerArrays = groupByLayer(nodeIds, layerOf);
+
+            const SPACING_X = 340;
+            const SPACING_Y = 170;
+            const TOP_Y = 100;
+
+            const { layers, crossings, exact } = exactMinCrossingLayers(
+              layerArrays,
+              edges,
+              SPACING_X,
+              SPACING_Y,
+              TOP_Y,
+            );
+            const pos = layoutCoords(layers, SPACING_X, SPACING_Y, TOP_Y);
+            const centerX = width / 2;
+
+            for (const n of simNodes) {
+              const p = pos.get(n.id);
+              if (!p) continue;
+              n.fx = centerX + p.x;
+              n.fy = p.y;
+              n.x = n.fx;
+              n.y = n.fy;
+            }
+            simulation.alpha(0.3).restart();
+            tick();
+
+            statusEl.textContent = exact
+              ? `${crossings} crossing${crossings === 1 ? "" : "s"} (exact global minimum)`
+              : `${crossings} crossing${crossings === 1 ? "" : "s"} (best found - too many nodes per row for an exact search)`;
+          }
+
+          document
+            .getElementById("arrange-exact-btn")
+            .addEventListener("click", autoArrangeExactMinCrossings);
+
           document
             .getElementById("physics-toggle")
             .addEventListener("change", (e) => {
@@ -1443,8 +1790,7 @@
             const row = document.getElementById("hidden-row");
             if (hidden.size) {
               row.style.display = "flex";
-              document.getElementById("hidden-count").textContent =
-                hidden.size;
+              document.getElementById("hidden-count").textContent = hidden.size;
             } else {
               row.style.display = "none";
             }

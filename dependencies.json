@@ -132,8 +132,26 @@
     "value": [
       "ui-setup/internal.ts",
       "workbench-tools/output-visualizer/internal.ts",
-      "nunigraph/init.ts",
-      "nunigraph/graph-tests/combinatorialExplosionTest.ts"
+      "nunigraph/graph-tests/combinatorialExplosionTest.ts",
+      "workbench-tools/sample-library/SampleLibrary.ts",
+      "storage/sampleDB.ts",
+      "webaudio2/nodes/nuni-graph-audio-node/NuniGraphAudioNode.ts",
+      "workbench-tools/waveform-utils/WaveformUtils.ts",
+      "dispatch/dispatcher.ts",
+      "dispatch/commandRoot.ts",
+      "webaudio2/scheduling-core/MasterClock.ts",
+      "workbench-tools/sample-library/engine/validateChainOps.ts",
+      "webaudio2/loadAudioWorklet.ts",
+      "share-project/loadProjectFromURL.ts",
+      "dispatch/commandMap.ts",
+      "dispatch/CommandType.ts",
+      "nunigraph/controller/event-handling/handleEvents.ts",
+      "nunigraph/controller/GraphController.ts",
+      "nunigraph/controller/openGraphControllers.ts",
+      "nunigraph/controller/topController.ts",
+      "nunigraph/commands/ModifyGraphCommand.ts",
+      "nunigraph/controller/NuniGraphController.ts",
+      "nunigraph/controller/utils/yieldNodesFiltered.ts"
     ],
     "types": []
   },
@@ -560,30 +578,6 @@
       "nunigraph/model/NuniGraphNode.ts",
       "nunigraph/view/graph-renderer/NuniGraphRenderer.ts"
     ]
-  },
-  "nunigraph/init.ts": {
-    "value": [
-      "workbench-tools/sample-library/SampleLibrary.ts",
-      "storage/sampleDB.ts",
-      "webaudio2/nodes/nuni-graph-audio-node/NuniGraphAudioNode.ts",
-      "workbench-tools/waveform-utils/WaveformUtils.ts",
-      "dispatch/dispatcher.ts",
-      "dispatch/commandRoot.ts",
-      "webaudio2/scheduling-core/MasterClock.ts",
-      "workbench-tools/sample-library/engine/validateChainOps.ts",
-      "webaudio2/loadAudioWorklet.ts",
-      "share-project/loadProjectFromURL.ts",
-      "dispatch/commandMap.ts",
-      "dispatch/CommandType.ts",
-      "nunigraph/controller/event-handling/handleEvents.ts",
-      "nunigraph/controller/GraphController.ts",
-      "nunigraph/controller/openGraphControllers.ts",
-      "nunigraph/controller/topController.ts",
-      "nunigraph/commands/ModifyGraphCommand.ts",
-      "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/controller/utils/yieldNodesFiltered.ts"
-    ],
-    "types": []
   },
   "nunigraph/model/NuniGraph.ts": {
     "value": [
@@ -1053,6 +1047,22 @@
     ],
     "types": []
   },
+  "ui-setup/connect-save-module.ts": {
+    "value": [
+      "webaudio2/nodes/nuni-graph-audio-node/saveModuleRequestedEvent.ts",
+      "nunigraph/controller/utils/getSampleHostNodes.ts",
+      "nunigraph/controller/utils/getReferencedSampleIds.ts",
+      "share-project/confirmSavingSharedSamples.ts",
+      "workbench-tools/sample-library/SampleLibrary.ts",
+      "storage/ModuleStorage.ts",
+      "ui-library/components/askForText.ts",
+      "ui-library/components/sendNotificationBox.ts",
+      "ui-library/functions/withWaitCursor.ts"
+    ],
+    "types": [
+      "nunigraph/controller/NuniGraphController.ts"
+    ]
+  },
   "ui-setup/connect-volume-warning.ts": {
     "value": [
       "audio-context/audioCtx.ts",
@@ -1070,6 +1080,7 @@
     "value": [
       "ui-setup/add-resize-listener.ts",
       "ui-setup/connect-menu-items.ts",
+      "ui-setup/connect-save-module.ts",
       "ui-setup/connect-volume-warning.ts",
       "ui-setup/connect-welcome-container.ts",
       "theme/initTheme.ts"
@@ -1364,20 +1375,19 @@
     "value": [
       "ui-library/components/value-setters/createSelectionPrompt.ts",
       "webaudio2/BaseAudioNode.ts",
-      "storage/ModuleStorage.ts",
-      "ui-library/components/sendNotificationBox.ts",
-      "ui-library/components/askForText.ts",
-      "ui-library/functions/withWaitCursor.ts",
-      "workbench-tools/sample-library/SampleLibrary.ts",
-      "nunigraph/controller/utils/getSampleHostNodes.ts",
-      "nunigraph/controller/utils/getReferencedSampleIds.ts",
       "nunigraph/controller/openGraphControllers.ts",
-      "share-project/confirmSavingSharedSamples.ts"
+      "webaudio2/nodes/nuni-graph-audio-node/saveModuleRequestedEvent.ts"
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts",
       "nunigraph/model/NuniGraphNode.ts",
       "webaudio2/NodeContext.ts"
+    ]
+  },
+  "webaudio2/nodes/nuni-graph-audio-node/saveModuleRequestedEvent.ts": {
+    "value": [],
+    "types": [
+      "nunigraph/controller/NuniGraphController.ts"
     ]
   },
   "webaudio2/nodes/nuni-panner-node/NuniPannerNode.ts": {
