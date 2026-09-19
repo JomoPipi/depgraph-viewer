@@ -336,6 +336,9 @@
 
         <button id="reset-btn">Collapse all</button>
         <button id="arrange-exact-btn">Auto-arrange: min crossings</button>
+        <button id="arrange-balanced-btn">
+          Auto-arrange: balanced (avoid overlaps)
+        </button>
         <div
           id="arrange-status"
           style="margin-top: 6px; color: var(--muted); font-size: 11px"
@@ -941,6 +944,179 @@
             }
           }
           return { layers: current, crossings: bestCount, exact: false };
+        }
+
+        // ---------------------------------------------------------------
+        // 2c. A second auto-arrange: same idea as 2b, but (a) layers by
+        // longest path to a SINK instead of from a source, so every node
+        // with no outgoing edges (main.ts's exact opposite - a pure "leaf"
+        // like a utils folder) lands on the same bottom-most row instead of
+        // wherever its longest incoming chain happens to end, and (b)
+        // prefers orderings where a node's circle doesn't sit on top of an
+        // edge that doesn't touch it, as a tie-breaker behind crossing
+        // count. Left as fully separate functions from 2b (rather than
+        // adding options to it) so the original exact-min-crossing button
+        // stays exactly as it was.
+        // ---------------------------------------------------------------
+
+        // Longest path to a sink, computed by running the existing
+        // source-based layering on the reversed graph (a sink has no
+        // outgoing edges, i.e. no incoming edges once reversed, so it's a
+        // root there) and flipping the result so sinks land at the deepest
+        // layer instead of the shallowest.
+        function assignLayersFromSinks(nodeIds, edges) {
+          const reversed = edges.map((e) => ({
+            source: e.target,
+            target: e.source,
+          }));
+          const heightFromSink = assignLayers(nodeIds, reversed);
+          const maxHeight = Math.max(
+            0,
+            ...Array.from(heightFromSink.values()),
+          );
+          const layerOf = new Map();
+          for (const id of nodeIds) {
+            layerOf.set(id, maxHeight - heightFromSink.get(id));
+          }
+          return layerOf;
+        }
+
+        function pointSegmentDistance(p, a, b) {
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const lengthSq = dx * dx + dy * dy;
+          if (lengthSq < 1e-9) return Math.hypot(p.x - a.x, p.y - a.y);
+          let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq;
+          t = Math.max(0, Math.min(1, t));
+          const projX = a.x + t * dx;
+          const projY = a.y + t * dy;
+          return Math.hypot(p.x - projX, p.y - projY);
+        }
+
+        // How many (node, edge) pairs have the node's circle sitting on top
+        // of an edge it isn't an endpoint of - i.e. the edge's straight-line
+        // path passes within the node's radius (plus a little clearance).
+        const EDGE_CLEARANCE_PADDING = 10;
+        function countNodeEdgeOverlaps(nodeIds, edges, pos, radiusOf) {
+          let overlaps = 0;
+          for (const edge of edges) {
+            const a = pos.get(edge.source);
+            const b = pos.get(edge.target);
+            for (const id of nodeIds) {
+              if (id === edge.source || id === edge.target) continue;
+              const clearance = radiusOf(id) + EDGE_CLEARANCE_PADDING;
+              if (pointSegmentDistance(pos.get(id), a, b) < clearance) {
+                overlaps++;
+              }
+            }
+          }
+          return overlaps;
+        }
+
+        // Crossings dominate the score (weighted far above any plausible
+        // overlap count) so a layout is only preferred for having fewer
+        // node/edge overlaps when it doesn't also mean more crossings -
+        // "get out of the way of a link whenever possible," not instead of
+        // minimizing crossings.
+        const OVERLAP_TIEBREAK_WEIGHT = 100000;
+        function balancedScore(nodeIds, edges, pos, radiusOf) {
+          const crossings = countCrossings(edges, pos);
+          const overlaps = countNodeEdgeOverlaps(nodeIds, edges, pos, radiusOf);
+          return {
+            crossings,
+            overlaps,
+            score: crossings * OVERLAP_TIEBREAK_WEIGHT + overlaps,
+          };
+        }
+
+        function balancedMinCrossingLayers(
+          layerArrays,
+          nodeIds,
+          edges,
+          radiusOf,
+          spacingX,
+          spacingY,
+          topY,
+        ) {
+          const evalCost = Math.max(
+            1,
+            edges.length * edges.length + edges.length * nodeIds.length,
+          );
+          const perLayerPerms = layerArrays.map(candidatePermutations);
+          const totalCombos = perLayerPerms.reduce(
+            (p, perms) => p * perms.length,
+            1,
+          );
+          const fullSearchFeasible =
+            totalCombos * evalCost <= MAX_BRUTE_FORCE_OPS;
+          const exact =
+            fullSearchFeasible &&
+            layerArrays.every(
+              (arr) => factorial(arr.length) <= factorial(MAX_EXACT_LAYER_SIZE),
+            );
+          const scoreOf = (layers) =>
+            balancedScore(
+              nodeIds,
+              edges,
+              layoutCoords(layers, spacingX, spacingY, topY),
+              radiusOf,
+            );
+
+          if (fullSearchFeasible) {
+            let best = null;
+            let bestResult = null;
+            const chosen = [];
+            (function recurse(layerIdx) {
+              if (layerIdx === perLayerPerms.length) {
+                const result = scoreOf(chosen);
+                if (!bestResult || result.score < bestResult.score) {
+                  bestResult = result;
+                  best = chosen.map((arr) => arr.slice());
+                }
+                return;
+              }
+              for (const perm of perLayerPerms[layerIdx]) {
+                chosen.push(perm);
+                recurse(layerIdx + 1);
+                chosen.pop();
+              }
+            })(0);
+            return {
+              layers: best,
+              crossings: bestResult.crossings,
+              overlaps: bestResult.overlaps,
+              exact,
+            };
+          }
+
+          let current = layerArrays.map((arr) => arr.slice());
+          let best = scoreOf(current);
+          let improved = true;
+          let iterations = 0;
+          while (improved && iterations < 12) {
+            improved = false;
+            iterations++;
+            for (let li = 0; li < current.length; li++) {
+              let bestPermForLayer = current[li];
+              for (const perm of perLayerPerms[li]) {
+                const trial = current.slice();
+                trial[li] = perm;
+                const result = scoreOf(trial);
+                if (result.score < best.score) {
+                  best = result;
+                  bestPermForLayer = perm;
+                  improved = true;
+                }
+              }
+              current[li] = bestPermForLayer;
+            }
+          }
+          return {
+            layers: current,
+            crossings: best.crossings,
+            overlaps: best.overlaps,
+            exact: false,
+          };
         }
 
         // ---------------------------------------------------------------
@@ -1748,6 +1924,66 @@
           document
             .getElementById("arrange-exact-btn")
             .addEventListener("click", autoArrangeExactMinCrossings);
+
+          // Same idea, but layers by longest path to a SINK (so every node
+          // with no outgoing edges lands on the same bottom row, instead of
+          // wherever its longest incoming chain happens to end) and prefers
+          // orderings that keep node circles off of edges that don't touch
+          // them, as a tie-breaker behind crossing count.
+          function autoArrangeBalanced() {
+            const statusEl = document.getElementById("arrange-status");
+            if (!simNodes.length) return;
+
+            const nodeIds = simNodes.map((n) => n.id);
+            const edges = simLinks.map((d) => ({
+              source: edgeSourceId(d),
+              target: edgeTargetId(d),
+            }));
+            const radiusById = new Map(simNodes.map((n) => [n.id, n.radius]));
+            const radiusOf = (id) => radiusById.get(id) || 0;
+
+            const layerOf = assignLayersFromSinks(nodeIds, edges);
+            const layerArrays = groupByLayer(nodeIds, layerOf);
+
+            const SPACING_X = 340;
+            const SPACING_Y = 170;
+            const TOP_Y = 100;
+
+            const { layers, crossings, overlaps, exact } =
+              balancedMinCrossingLayers(
+                layerArrays,
+                nodeIds,
+                edges,
+                radiusOf,
+                SPACING_X,
+                SPACING_Y,
+                TOP_Y,
+              );
+            const pos = layoutCoords(layers, SPACING_X, SPACING_Y, TOP_Y);
+            const centerX = width / 2;
+
+            for (const n of simNodes) {
+              const p = pos.get(n.id);
+              if (!p) continue;
+              n.fx = centerX + p.x;
+              n.fy = p.y;
+              n.x = n.fx;
+              n.y = n.fy;
+            }
+            simulation.alpha(0.3).restart();
+            tick();
+
+            statusEl.textContent =
+              `${crossings} crossing${crossings === 1 ? "" : "s"}, ` +
+              `${overlaps} node/edge overlap${overlaps === 1 ? "" : "s"}` +
+              (exact
+                ? " (exact global minimum)"
+                : " (best found - too many nodes per row for an exact search)");
+          }
+
+          document
+            .getElementById("arrange-balanced-btn")
+            .addEventListener("click", autoArrangeBalanced);
 
           document
             .getElementById("physics-toggle")
