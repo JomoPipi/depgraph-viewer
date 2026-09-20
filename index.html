@@ -273,6 +273,22 @@
         pointer-events: none;
         opacity: 0.5;
       }
+
+      .hud-section {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+      }
+      .hud-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .hud-section button {
+        text-align: left;
+      }
     </style>
   </head>
   <body>
@@ -335,17 +351,17 @@
         </label>
 
         <button id="reset-btn">Collapse all</button>
-        <button id="arrange-exact-btn">Auto-arrange: min crossings</button>
-        <button id="arrange-balanced-btn">
-          Auto-arrange: balanced (avoid overlaps)
-        </button>
-        <button id="arrange-staggered-btn">
-          Auto-arrange: staggered (no straight-through nodes)
-        </button>
-        <div
-          id="arrange-status"
-          style="margin-top: 6px; color: var(--muted); font-size: 11px"
-        ></div>
+
+        <div class="hud-section">
+          <div class="hud-section-title">Auto-arrange</div>
+          <button id="arrange-exact-btn">Min crossings</button>
+          <button id="arrange-balanced-btn">Balanced</button>
+          <button id="arrange-staggered-btn">Staggered</button>
+          <div
+            id="arrange-status"
+            style="margin-top: 6px; color: var(--muted); font-size: 11px"
+          ></div>
+        </div>
       </div>
       <div id="breadcrumb" style="display: none"></div>
       <div id="context-menu" class="context-menu" style="display: none">
@@ -973,10 +989,7 @@
             target: e.source,
           }));
           const heightFromSink = assignLayers(nodeIds, reversed);
-          const maxHeight = Math.max(
-            0,
-            ...Array.from(heightFromSink.values()),
-          );
+          const maxHeight = Math.max(0, ...Array.from(heightFromSink.values()));
           const layerOf = new Map();
           for (const id of nodeIds) {
             layerOf.set(id, maxHeight - heightFromSink.get(id));
@@ -1179,7 +1192,8 @@
           const allSlots = Array.from({ length: slotCount }, (_, i) => i);
           for (
             let i = 0;
-            i < RANDOM_CANDIDATE_COUNT && candidates.length < RANDOM_CANDIDATE_COUNT;
+            i < RANDOM_CANDIDATE_COUNT &&
+            candidates.length < RANDOM_CANDIDATE_COUNT;
             i++
           ) {
             const shuffled = allSlots.slice();
