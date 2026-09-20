@@ -1680,7 +1680,18 @@
               : null;
             simulation.nodes(simNodes);
             simulation.force("link").links(simLinks);
-            simulation.alpha(0.9).restart();
+            // "Physics while dragging" off means the layout should hold
+            // still, period - not just during a drag. Reheating here
+            // unconditionally used to make every render() (toggling a
+            // filter, expanding a folder, etc.) jiggle the whole graph even
+            // with physics supposedly off; draw() below still does one
+            // immediate tick() to position anything new, it just won't keep
+            // animating afterward.
+            if (physicsEnabled) {
+              simulation.alpha(0.9).restart();
+            } else {
+              simulation.alpha(0).stop();
+            }
 
             draw(groups);
           }
@@ -2169,8 +2180,8 @@
             const layerOf = assignLayersFromSinks(nodeIds, edges);
             const layerArrays = groupByLayer(nodeIds, layerOf);
 
-            const SPACING_X = 340;
-            const SPACING_Y = 170;
+            const SPACING_X = 300;
+            const SPACING_Y = 150;
             const TOP_Y = 100;
 
             const { layers, crossings, overlaps, exact } =
@@ -2280,6 +2291,7 @@
             .addEventListener("change", (e) => {
               physicsEnabled = e.target.checked;
               saveSettings({ physicsEnabled });
+              if (!physicsEnabled) simulation.alpha(0).stop();
             });
 
           document
@@ -2441,6 +2453,8 @@
             .addEventListener("click", exitIsolation);
 
           render();
+
+          autoArrangeBalanced();
         }
       })();
     </script>
