@@ -2307,7 +2307,22 @@
             .addEventListener("change", (e) => {
               physicsEnabled = e.target.checked;
               saveSettings({ physicsEnabled });
-              if (!physicsEnabled) simulation.alpha(0).stop();
+              if (!physicsEnabled) {
+                simulation.alpha(0).stop();
+              } else {
+                // Auto-arrange (or dragging while physics was off) pins
+                // nodes via fx/fy. Only a node's own drag-end handler clears
+                // its pin, so turning physics back on without releasing
+                // them all here meant the simulation's forces only ever
+                // acted on whichever node you happened to drag next - which
+                // could fling that one lone free node wildly, since it alone
+                // had to counterbalance every other still-pinned node.
+                for (const n of simNodes) {
+                  n.fx = null;
+                  n.fy = null;
+                }
+                simulation.alpha(0.5).restart();
+              }
             });
 
           document
