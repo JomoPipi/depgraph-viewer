@@ -339,6 +339,9 @@
         <button id="arrange-balanced-btn">
           Auto-arrange: balanced (avoid overlaps)
         </button>
+        <button id="arrange-staggered-btn">
+          Auto-arrange: staggered (no straight-through nodes)
+        </button>
         <div
           id="arrange-status"
           style="margin-top: 6px; color: var(--muted); font-size: 11px"
@@ -1113,6 +1116,213 @@
           }
           return {
             layers: current,
+            crossings: best.crossings,
+            overlaps: best.overlaps,
+            exact: false,
+          };
+        }
+
+        // ---------------------------------------------------------------
+        // 2d. A third auto-arrange: same layering + scoring as 2c, but each
+        // layer searches over a shared pool of x "slots" wider than its own
+        // node count, instead of being forced into consecutive columns
+        // centered on that layer alone. A layer with only one node
+        // previously had zero placement freedom - it was always centered at
+        // x=0 - so a chain of single-node layers (e.g. main.ts, ui-setup,
+        // share-project, nunigraph, workbench-tools) was locked onto the
+        // same vertical line no matter what, and any edge that skipped over
+        // one of them (main.ts -> workbench-tools, say) ran straight through
+        // the ones in between. Extra slots give even a singleton layer room
+        // to shift sideways, so the existing node/edge clearance scoring
+        // from 2c can actually act on it instead of having no alternative to
+        // compare against. Left fully separate from 2c so it stays as it is.
+        // ---------------------------------------------------------------
+
+        function slotPermutations(slotCount, k) {
+          const slots = Array.from({ length: slotCount }, (_, i) => i);
+          if (k === 0) return [[]];
+          const result = [];
+          function backtrack(current, remaining) {
+            if (current.length === k) {
+              result.push(current.slice());
+              return;
+            }
+            for (let i = 0; i < remaining.length; i++) {
+              current.push(remaining[i]);
+              backtrack(
+                current,
+                remaining.slice(0, i).concat(remaining.slice(i + 1)),
+              );
+              current.pop();
+            }
+          }
+          backtrack([], slots);
+          return result;
+        }
+
+        // Exact k-of-n slot assignments when that's small enough, else a
+        // bounded random sample (always including the plain centered
+        // assignment), same spirit as candidatePermutations.
+        function candidateSlotPlacements(k, slotCount) {
+          const fullCount =
+            factorial(slotCount) / factorial(Math.max(0, slotCount - k));
+          if (fullCount <= factorial(MAX_EXACT_LAYER_SIZE)) {
+            return slotPermutations(slotCount, k);
+          }
+          const seen = new Set();
+          const centered = Array.from(
+            { length: k },
+            (_, i) => Math.floor((slotCount - k) / 2) + i,
+          );
+          const candidates = [centered];
+          seen.add(centered.join(","));
+          const allSlots = Array.from({ length: slotCount }, (_, i) => i);
+          for (
+            let i = 0;
+            i < RANDOM_CANDIDATE_COUNT && candidates.length < RANDOM_CANDIDATE_COUNT;
+            i++
+          ) {
+            const shuffled = allSlots.slice();
+            for (let j = shuffled.length - 1; j > 0; j--) {
+              const r = Math.floor(Math.random() * (j + 1));
+              [shuffled[j], shuffled[r]] = [shuffled[r], shuffled[j]];
+            }
+            const pick = shuffled.slice(0, k);
+            const key = pick.join(",");
+            if (!seen.has(key)) {
+              seen.add(key);
+              candidates.push(pick);
+            }
+          }
+          return candidates;
+        }
+
+        function layoutCoordsSlotted(
+          placements,
+          layerArrays,
+          slotCount,
+          spacingX,
+          spacingY,
+          topY,
+        ) {
+          const pos = new Map();
+          layerArrays.forEach((arr, layerIdx) => {
+            const placement = placements[layerIdx];
+            arr.forEach((id, i) => {
+              pos.set(id, {
+                x: (placement[i] - (slotCount - 1) / 2) * spacingX,
+                y: topY + layerIdx * spacingY,
+              });
+            });
+          });
+          return pos;
+        }
+
+        // How many extra slots beyond the widest layer's own size every
+        // layer gets to choose from - the source of the sideways freedom a
+        // singleton layer otherwise wouldn't have at all.
+        const EXTRA_SLOTS = 2;
+
+        function slottedBalancedLayers(
+          layerArrays,
+          nodeIds,
+          edges,
+          radiusOf,
+          spacingX,
+          spacingY,
+          topY,
+        ) {
+          const maxLayerSize = Math.max(1, ...layerArrays.map((a) => a.length));
+          const slotCount = maxLayerSize + EXTRA_SLOTS;
+          const evalCost = Math.max(
+            1,
+            edges.length * edges.length + edges.length * nodeIds.length,
+          );
+          const perLayerPlacements = layerArrays.map((arr) =>
+            candidateSlotPlacements(arr.length, slotCount),
+          );
+          const totalCombos = perLayerPlacements.reduce(
+            (p, placements) => p * placements.length,
+            1,
+          );
+          const fullSearchFeasible =
+            totalCombos * evalCost <= MAX_BRUTE_FORCE_OPS;
+          const exact =
+            fullSearchFeasible &&
+            layerArrays.every((arr) => {
+              const fullCount =
+                factorial(slotCount) /
+                factorial(Math.max(0, slotCount - arr.length));
+              return fullCount <= factorial(MAX_EXACT_LAYER_SIZE);
+            });
+          const scoreOf = (placements) =>
+            balancedScore(
+              nodeIds,
+              edges,
+              layoutCoordsSlotted(
+                placements,
+                layerArrays,
+                slotCount,
+                spacingX,
+                spacingY,
+                topY,
+              ),
+              radiusOf,
+            );
+
+          if (fullSearchFeasible) {
+            let best = null;
+            let bestResult = null;
+            const chosen = [];
+            (function recurse(layerIdx) {
+              if (layerIdx === perLayerPlacements.length) {
+                const result = scoreOf(chosen);
+                if (!bestResult || result.score < bestResult.score) {
+                  bestResult = result;
+                  best = chosen.map((p) => p.slice());
+                }
+                return;
+              }
+              for (const placement of perLayerPlacements[layerIdx]) {
+                chosen.push(placement);
+                recurse(layerIdx + 1);
+                chosen.pop();
+              }
+            })(0);
+            return {
+              placements: best,
+              slotCount,
+              crossings: bestResult.crossings,
+              overlaps: bestResult.overlaps,
+              exact,
+            };
+          }
+
+          let current = perLayerPlacements.map((placements) => placements[0]);
+          let best = scoreOf(current);
+          let improved = true;
+          let iterations = 0;
+          while (improved && iterations < 12) {
+            improved = false;
+            iterations++;
+            for (let li = 0; li < current.length; li++) {
+              let bestForLayer = current[li];
+              for (const placement of perLayerPlacements[li]) {
+                const trial = current.slice();
+                trial[li] = placement;
+                const result = scoreOf(trial);
+                if (result.score < best.score) {
+                  best = result;
+                  bestForLayer = placement;
+                  improved = true;
+                }
+              }
+              current[li] = bestForLayer;
+            }
+          }
+          return {
+            placements: current,
+            slotCount,
             crossings: best.crossings,
             overlaps: best.overlaps,
             exact: false,
@@ -1984,6 +2194,72 @@
           document
             .getElementById("arrange-balanced-btn")
             .addEventListener("click", autoArrangeBalanced);
+
+          // Same layering + scoring as "balanced", but each layer picks
+          // from a wider pool of x-slots than it has nodes, so a run of
+          // single-node layers isn't locked onto one vertical line with no
+          // way to dodge a skip-layer edge that runs straight through it.
+          function autoArrangeStaggered() {
+            const statusEl = document.getElementById("arrange-status");
+            if (!simNodes.length) return;
+
+            const nodeIds = simNodes.map((n) => n.id);
+            const edges = simLinks.map((d) => ({
+              source: edgeSourceId(d),
+              target: edgeTargetId(d),
+            }));
+            const radiusById = new Map(simNodes.map((n) => [n.id, n.radius]));
+            const radiusOf = (id) => radiusById.get(id) || 0;
+
+            const layerOf = assignLayersFromSinks(nodeIds, edges);
+            const layerArrays = groupByLayer(nodeIds, layerOf);
+
+            const SPACING_X = 340;
+            const SPACING_Y = 170;
+            const TOP_Y = 100;
+
+            const { placements, slotCount, crossings, overlaps, exact } =
+              slottedBalancedLayers(
+                layerArrays,
+                nodeIds,
+                edges,
+                radiusOf,
+                SPACING_X,
+                SPACING_Y,
+                TOP_Y,
+              );
+            const pos = layoutCoordsSlotted(
+              placements,
+              layerArrays,
+              slotCount,
+              SPACING_X,
+              SPACING_Y,
+              TOP_Y,
+            );
+            const centerX = width / 2;
+
+            for (const n of simNodes) {
+              const p = pos.get(n.id);
+              if (!p) continue;
+              n.fx = centerX + p.x;
+              n.fy = p.y;
+              n.x = n.fx;
+              n.y = n.fy;
+            }
+            simulation.alpha(0.3).restart();
+            tick();
+
+            statusEl.textContent =
+              `${crossings} crossing${crossings === 1 ? "" : "s"}, ` +
+              `${overlaps} node/edge overlap${overlaps === 1 ? "" : "s"}` +
+              (exact
+                ? " (exact global minimum)"
+                : " (best found - too many nodes/slots for an exact search)");
+          }
+
+          document
+            .getElementById("arrange-staggered-btn")
+            .addEventListener("click", autoArrangeStaggered);
 
           document
             .getElementById("physics-toggle")
