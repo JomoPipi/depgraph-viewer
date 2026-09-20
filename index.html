@@ -2113,9 +2113,23 @@
           // otherwise. Pins stick until something else (drag, expand,
           // toggling a filter) triggers a fresh render(), same as a manual
           // drag would.
+          // All three auto-arrange buttons pin exact node positions - if
+          // physics stayed on, the very next render() (any filter toggle,
+          // expand/collapse, etc.) would reheat the simulation and start
+          // dragging things away from the arrangement just computed,
+          // undoing the whole point of pressing the button.
+          function disablePhysicsForAutoArrange() {
+            if (!physicsEnabled) return;
+            physicsEnabled = false;
+            document.getElementById("physics-toggle").checked = false;
+            saveSettings({ physicsEnabled });
+            simulation.alpha(0).stop();
+          }
+
           function autoArrangeExactMinCrossings() {
             const statusEl = document.getElementById("arrange-status");
             if (!simNodes.length) return;
+            disablePhysicsForAutoArrange();
 
             const nodeIds = simNodes.map((n) => n.id);
             const edges = simLinks.map((d) => ({
@@ -2168,6 +2182,7 @@
           function autoArrangeBalanced() {
             const statusEl = document.getElementById("arrange-status");
             if (!simNodes.length) return;
+            disablePhysicsForAutoArrange();
 
             const nodeIds = simNodes.map((n) => n.id);
             const edges = simLinks.map((d) => ({
@@ -2227,6 +2242,7 @@
           function autoArrangeStaggered() {
             const statusEl = document.getElementById("arrange-status");
             if (!simNodes.length) return;
+            disablePhysicsForAutoArrange();
 
             const nodeIds = simNodes.map((n) => n.id);
             const edges = simLinks.map((d) => ({
