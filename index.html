@@ -165,6 +165,10 @@
       .node-group:hover .node-circle {
         filter: brightness(1.25);
       }
+      .node-group.selected .node-circle {
+        stroke: var(--accent);
+        stroke-width: 3px;
+      }
       .node-label {
         fill: var(--text);
         font-size: 11px;
@@ -274,6 +278,17 @@
         opacity: 0.5;
       }
 
+      #canvas.select-mode {
+        cursor: crosshair;
+      }
+      .selection-box {
+        fill: rgba(242, 177, 52, 0.12);
+        stroke: var(--accent);
+        stroke-width: 1px;
+        stroke-dasharray: 4 3;
+        pointer-events: none;
+      }
+
       .hud-section {
         margin-top: 12px;
         padding-top: 10px;
@@ -339,6 +354,9 @@
           Click a <span style="color: var(--folder)">folder</span> to expand it.
           Click a dashed cluster box (or its label) to collapse it back. Dashed
           arrows are type-only imports. Right-click a node for more options.
+          Shift-click nodes (or use the select tool below to box-select) to
+          select a group - drag any selected node to move the whole group,
+          or right-click one to hide them all.
         </div>
 
         <div class="hud-control-row" id="hidden-row" style="display: none">
@@ -350,6 +368,16 @@
           <span>Isolated: <span id="isolation-label"></span></span>
           <button id="exit-isolation-btn" class="hud-inline-btn">Exit</button>
         </div>
+
+        <div class="hud-control-row" id="selection-row" style="display: none">
+          <span>Selected: <span id="selection-count">0</span></span>
+          <button id="clear-selection-btn" class="hud-inline-btn">Clear</button>
+        </div>
+
+        <label class="hud-control-row" for="select-tool-toggle">
+          <span>Select tool (drag to box-select)</span>
+          <input type="checkbox" id="select-tool-toggle" />
+        </label>
 
         <label class="hud-control-row" for="physics-toggle">
           <span>Physics while dragging</span>
@@ -1438,6 +1466,8 @@
 
           const expanded = new Set(); // folder ids currently expanded
           const hidden = new Set(); // node ids hidden via the context menu
+          const selected = new Set(); // node ids selected for group move/hide
+          let selectionTool = false; // when true, drag on empty canvas box-selects
           let physicsEnabled =
             typeof saved.physicsEnabled === "boolean"
               ? saved.physicsEnabled
@@ -1507,6 +1537,14 @@
           const zoom = d3
             .zoom()
             .scaleExtent([0.15, 4])
+            .filter((event) => {
+              // While the select tool is on, drags on the canvas draw a
+              // selection box instead of panning - only wheel-zoom still
+              // works. Node/cluster drags are unaffected: they're handled by
+              // their own d3.drag behaviors, not by this zoom behavior.
+              if (selectionTool) return event.type === "wheel";
+              return !event.ctrlKey && !event.button;
+            })
             .on("zoom", (event) => {
               zoomLayer.attr("transform", event.transform);
             })
@@ -1708,6 +1746,14 @@
               ? "Expanded: " + Array.from(expanded).join(", ")
               : "Showing top-level folders";
 
+            // Drop selected ids that no longer correspond to a visible node
+            // (e.g. their folder was collapsed) so the selection count and
+            // context-menu "hide N" label stay accurate.
+            const visibleIds = new Set(nodeEntries.map(([id]) => id));
+            for (const id of Array.from(selected)) {
+              if (!visibleIds.has(id)) selected.delete(id);
+            }
+
             simNodes = nodeEntries.map(([id, info]) => {
               const memo = positionMemo.get(id);
               const parentMemo = info.node.parent
@@ -1797,6 +1843,15 @@
               .call(drag(simulation))
               .on("click", (event, d) => {
                 event.stopPropagation();
+                if (event.shiftKey) {
+                  toggleNodeSelection(d.id);
+                  return;
+                }
+                if (selectionTool) {
+                  setSelection([d.id]);
+                  return;
+                }
+                if (selected.size) clearSelection();
                 if (d.kind === "folder") {
                   expanded.add(d.id);
                   render();
@@ -1805,6 +1860,9 @@
               .on("contextmenu", (event, d) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (!selected.has(d.id)) {
+                  setSelection([d.id]);
+                }
                 showContextMenu(event.clientX, event.clientY, d);
               })
               .on("mouseenter", (event, d) => setFocus(d.id))
@@ -1855,6 +1913,7 @@
             simulation.on("tick", tick);
             tick();
             applyDimming();
+            updateSelectionUI();
           }
 
           let currentGroups = [];
@@ -2129,36 +2188,64 @@
           }
 
           function drag(sim) {
+            // Dragging a node that's part of a multi-selection moves every
+            // selected node together, preserving their relative offsets from
+            // the node actually under the pointer.
+            let dragIds = [];
+            let offsets = new Map();
+            let nodeById = new Map();
+
             return d3
               .drag()
               .on("start", (event, d) => {
-                d.fx = d.x;
-                d.fy = d.y;
+                nodeById = new Map(simNodes.map((n) => [n.id, n]));
+                dragIds =
+                  selected.has(d.id) && selected.size > 1
+                    ? Array.from(selected)
+                    : [d.id];
+                offsets = new Map();
+                for (const id of dragIds) {
+                  const n = nodeById.get(id);
+                  if (!n) continue;
+                  n.fx = n.x;
+                  n.fy = n.y;
+                  offsets.set(id, { dx: n.x - d.x, dy: n.y - d.y });
+                }
                 if (physicsEnabled && !event.active) {
                   sim.alphaTarget(0.15).restart();
                 }
               })
               .on("drag", (event, d) => {
-                d.fx = event.x;
-                d.fy = event.y;
-                if (!physicsEnabled) {
-                  // The simulation is never reheated in this mode, so it may
-                  // be fully at rest (no ticks firing on its own). Move the
-                  // dragged node and redraw manually - everything else is
-                  // left untouched since we never call the force forward.
-                  d.x = event.x;
-                  d.y = event.y;
-                  tick();
+                for (const id of dragIds) {
+                  const n = nodeById.get(id);
+                  if (!n) continue;
+                  const off = offsets.get(id);
+                  n.fx = event.x + off.dx;
+                  n.fy = event.y + off.dy;
+                  if (!physicsEnabled) {
+                    // The simulation is never reheated in this mode, so it
+                    // may be fully at rest (no ticks firing on its own).
+                    // Move the dragged node(s) and redraw manually -
+                    // everything else is left untouched since we never call
+                    // the force forward.
+                    n.x = n.fx;
+                    n.y = n.fy;
+                  }
                 }
+                if (!physicsEnabled) tick();
               })
               .on("end", (event, d) => {
                 if (physicsEnabled) {
                   if (!event.active) sim.alphaTarget(0);
-                  d.fx = null;
-                  d.fy = null;
+                  for (const id of dragIds) {
+                    const n = nodeById.get(id);
+                    if (!n) continue;
+                    n.fx = null;
+                    n.fy = null;
+                  }
                 }
-                // physics off: leave fx/fy set so the node stays pinned
-                // exactly where it was dropped, instead of being released
+                // physics off: leave fx/fy set so the node(s) stay pinned
+                // exactly where they were dropped, instead of being released
                 // back into the simulation to keep drifting.
               });
           }
@@ -2430,7 +2517,19 @@
 
           function hideNode(id) {
             hidden.add(id);
+            selected.delete(id);
             updateHiddenUI();
+            updateSelectionUI();
+            render();
+          }
+
+          function hideNodes(ids) {
+            for (const id of ids) {
+              hidden.add(id);
+              selected.delete(id);
+            }
+            updateHiddenUI();
+            updateSelectionUI();
             render();
           }
 
@@ -2438,6 +2537,40 @@
             hidden.clear();
             updateHiddenUI();
             render();
+          }
+
+          // ---- Multi-node selection (shift-click or the select tool) ----
+
+          function updateSelectionUI() {
+            const row = document.getElementById("selection-row");
+            if (selected.size) {
+              row.style.display = "flex";
+              document.getElementById("selection-count").textContent =
+                selected.size;
+            } else {
+              row.style.display = "none";
+            }
+            nodeLayer
+              .selectAll("g.node-group")
+              .classed("selected", (d) => selected.has(d.id));
+          }
+
+          function toggleNodeSelection(id) {
+            if (selected.has(id)) selected.delete(id);
+            else selected.add(id);
+            updateSelectionUI();
+          }
+
+          function setSelection(ids) {
+            selected.clear();
+            for (const id of ids) selected.add(id);
+            updateSelectionUI();
+          }
+
+          function clearSelection() {
+            if (!selected.size) return;
+            selected.clear();
+            updateSelectionUI();
           }
 
           function updateIsolationUI() {
@@ -2502,11 +2635,14 @@
 
           function showContextMenu(x, y, d) {
             contextMenuNode = d;
+            const multi = selected.size > 1;
+            contextMenuEl.querySelector('[data-action="hide"]').textContent =
+              multi ? `Hide ${selected.size} nodes` : "Hide node";
             contextMenuEl
               .querySelector('[data-action="isolate"]')
               .setAttribute(
                 "data-disabled",
-                d.kind === "folder" ? "false" : "true",
+                !multi && d.kind === "folder" ? "false" : "true",
               );
             contextMenuEl.style.left = x + "px";
             contextMenuEl.style.top = y + "px";
@@ -2527,16 +2663,28 @@
             const d = contextMenuNode;
             hideContextMenuEl();
             if (!d) return;
-            if (action === "hide") hideNode(d.id);
-            else if (action === "isolate" && d.kind === "folder") {
+            if (action === "hide") {
+              if (selected.size > 1) hideNodes(Array.from(selected));
+              else hideNode(d.id);
+            } else if (action === "isolate" && d.kind === "folder") {
               isolateFolder(d.id);
             }
           });
 
-          window.addEventListener("click", hideContextMenuEl);
+          window.addEventListener("click", (event) => {
+            hideContextMenuEl();
+            if (suppressNextBackgroundClear) {
+              suppressNextBackgroundClear = false;
+              return;
+            }
+            if (event.target === svg.node()) clearSelection();
+          });
           window.addEventListener("contextmenu", hideContextMenuEl);
           window.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") hideContextMenuEl();
+            if (event.key === "Escape") {
+              hideContextMenuEl();
+              clearSelection();
+            }
           });
 
           document
@@ -2545,6 +2693,79 @@
           document
             .getElementById("exit-isolation-btn")
             .addEventListener("click", exitIsolation);
+          document
+            .getElementById("clear-selection-btn")
+            .addEventListener("click", clearSelection);
+
+          document
+            .getElementById("select-tool-toggle")
+            .addEventListener("change", (e) => {
+              selectionTool = e.target.checked;
+              svg.classed("select-mode", selectionTool);
+            });
+
+          // ---- Box-select (only active while the select tool is on, and
+          // only when the drag starts on empty canvas - not on a node/edge/
+          // cluster, which have their own click/drag handlers) ----
+
+          const selectionBoxEl = svg
+            .append("rect")
+            .attr("class", "selection-box")
+            .style("display", "none");
+          let boxSelectStart = null;
+          // The mouseup that finishes a box-select is immediately followed
+          // by a native "click" on the same target - suppress that one click
+          // so it doesn't instantly clear the selection just made.
+          let suppressNextBackgroundClear = false;
+
+          svg.on("mousedown.boxselect", (event) => {
+            if (!selectionTool || event.button !== 0) return;
+            if (event.target !== svg.node()) return;
+            const [x, y] = d3.pointer(event, svg.node());
+            boxSelectStart = { x, y };
+            selectionBoxEl
+              .attr("x", x)
+              .attr("y", y)
+              .attr("width", 0)
+              .attr("height", 0)
+              .style("display", "block");
+          });
+
+          window.addEventListener("mousemove", (event) => {
+            if (!boxSelectStart) return;
+            const [x, y] = d3.pointer(event, svg.node());
+            selectionBoxEl
+              .attr("x", Math.min(x, boxSelectStart.x))
+              .attr("y", Math.min(y, boxSelectStart.y))
+              .attr("width", Math.abs(x - boxSelectStart.x))
+              .attr("height", Math.abs(y - boxSelectStart.y));
+          });
+
+          window.addEventListener("mouseup", (event) => {
+            if (!boxSelectStart) return;
+            const [x, y] = d3.pointer(event, svg.node());
+            const bx0 = Math.min(x, boxSelectStart.x);
+            const by0 = Math.min(y, boxSelectStart.y);
+            const bx1 = Math.max(x, boxSelectStart.x);
+            const by1 = Math.max(y, boxSelectStart.y);
+            boxSelectStart = null;
+            selectionBoxEl.style("display", "none");
+
+            // A near-zero-size box is just a click on empty canvas, already
+            // handled by the window "click" listener clearing the selection.
+            if (bx1 - bx0 < 3 && by1 - by0 < 3) return;
+
+            const transform = d3.zoomTransform(svg.node());
+            const ids = [];
+            for (const n of simNodes) {
+              const [sx, sy] = transform.apply([n.x, n.y]);
+              if (sx >= bx0 && sx <= bx1 && sy >= by0 && sy <= by1) {
+                ids.push(n.id);
+              }
+            }
+            setSelection(ids);
+            suppressNextBackgroundClear = true;
+          });
 
           render();
 

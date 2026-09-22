@@ -38,13 +38,9 @@
       "dispatch/Command.ts"
     ]
   },
-  "dispatch/commandRoot.ts": {
-    "value": [],
-    "types": []
-  },
   "dispatch/commands/CallFunctionCommand.ts": {
     "value": [
-      "dispatch/commandRoot.ts"
+      "dispatch/programRoot.ts"
     ],
     "types": [
       "dispatch/Command.ts"
@@ -63,7 +59,7 @@
   },
   "dispatch/commands/SetValueCommand.ts": {
     "value": [
-      "dispatch/commandRoot.ts"
+      "dispatch/programRoot.ts"
     ],
     "types": [
       "dispatch/Command.ts"
@@ -109,6 +105,10 @@
       "dispatch/commands/types/CommandDescriptor.ts"
     ]
   },
+  "dispatch/programRoot.ts": {
+    "value": [],
+    "types": []
+  },
   "helpers/globals.d.ts": {
     "value": [],
     "types": [
@@ -138,7 +138,7 @@
       "webaudio2/nodes/nuni-graph-audio-node/NuniGraphAudioNode.ts",
       "workbench-tools/waveform-utils/WaveformUtils.ts",
       "dispatch/dispatcher.ts",
-      "dispatch/commandRoot.ts",
+      "dispatch/programRoot.ts",
       "webaudio2/scheduling-core/MasterClock.ts",
       "workbench-tools/sample-library/engine/validateChainOps.ts",
       "webaudio2/loadAudioWorklet.ts",
@@ -465,7 +465,7 @@
   },
   "nunigraph/controller/utils/getController.ts": {
     "value": [
-      "dispatch/commandRoot.ts"
+      "dispatch/programRoot.ts"
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts",
@@ -689,7 +689,7 @@
   "share-project/loadProjectFromURL.ts": {
     "value": [
       "nunigraph/controller/GraphController.ts",
-      "webaudio2/scheduling-core/MasterClock.ts",
+      "dispatch/programRoot.ts",
       "nunigraph/serialization/compactGraphCodec.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
       "share-project/applySampleMappings.ts"
@@ -702,7 +702,7 @@
     "value": [
       "nunigraph/controller/GraphController.ts",
       "ui-library/components/sendNotificationBox.ts",
-      "webaudio2/scheduling-core/MasterClock.ts",
+      "dispatch/programRoot.ts",
       "nunigraph/serialization/compactGraphCodec.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
       "nunigraph/controller/utils/getSampleHostNodes.ts",
@@ -2207,7 +2207,7 @@
   },
   "workbench-tools/sample-library/editor/SampleEditorController.ts": {
     "value": [
-      "dispatch/commandRoot.ts",
+      "dispatch/programRoot.ts",
       "workbench-tools/sample-library/SampleLibrary.ts",
       "audio-context/audioCtx.ts",
       "ui-library/components/askForText.ts",
