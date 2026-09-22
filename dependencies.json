@@ -148,7 +148,6 @@
       "nunigraph/controller/event-handling/handleEvents.ts",
       "nunigraph/controller/GraphController.ts",
       "nunigraph/controller/openGraphControllers.ts",
-      "nunigraph/controller/topController.ts",
       "nunigraph/commands/ModifyGraphCommand.ts",
       "nunigraph/controller/NuniGraphController.ts",
       "nunigraph/controller/utils/yieldNodesFiltered.ts"
@@ -165,14 +164,6 @@
       "nunigraph/model/NuniGraph.ts",
       "dispatch/Command.ts",
       "dispatch/CommandType.ts"
-    ]
-  },
-  "nunigraph/commands/assert-node-path-chain.ts": {
-    "value": [],
-    "types": [
-      "webaudio2/node-commands/expandNodePath.ts",
-      "nunigraph/controller/NuniGraphController.ts",
-      "nunigraph/model/NuniGraphNode.ts"
     ]
   },
   "nunigraph/controller/GraphController.ts": {
@@ -447,12 +438,6 @@
       "nunigraph/controller/NuniGraphController.ts"
     ]
   },
-  "nunigraph/controller/topController.ts": {
-    "value": [],
-    "types": [
-      "nunigraph/controller/NuniGraphController.ts"
-    ]
-  },
   "nunigraph/controller/utils/determinePortsToConnect.ts": {
     "value": [
       "nunigraph/view/hover/GraphHover.ts"
@@ -480,7 +465,7 @@
   },
   "nunigraph/controller/utils/getController.ts": {
     "value": [
-      "nunigraph/controller/topController.ts"
+      "dispatch/commandRoot.ts"
     ],
     "types": [
       "nunigraph/controller/NuniGraphController.ts",
@@ -568,6 +553,7 @@
       "nunigraph/controller/event-handling/GraphLabelType.ts",
       "nunigraph/view/snapToGridElement.ts",
       "webaudio2/nodes/createAudioNode.ts",
+      "nunigraph/controller/graph-operations/getDisconnectPortCommands.ts",
       "nunigraph/model/SpecializedLists.ts"
     ],
     "types": [
@@ -582,6 +568,14 @@
     ],
     "types": [
       "webaudio2/nodes/AudioNodeMap.ts",
+      "nunigraph/model/NuniGraphNode.ts"
+    ]
+  },
+  "nunigraph/model/assert-node-path-chain.ts": {
+    "value": [],
+    "types": [
+      "webaudio2/node-commands/expandNodePath.ts",
+      "nunigraph/controller/NuniGraphController.ts",
       "nunigraph/model/NuniGraphNode.ts"
     ]
   },
@@ -1061,13 +1055,20 @@
   "webaudio2/BaseAudioNode.ts": {
     "value": [],
     "types": [
+      "webaudio2/GraphQueries.ts",
       "webaudio2/NodeContext.ts"
+    ]
+  },
+  "webaudio2/GraphQueries.ts": {
+    "value": [],
+    "types": [
+      "dispatch/commands/types/ExecuteCommandCommandParameters.ts"
     ]
   },
   "webaudio2/NodeContext.ts": {
     "value": [],
     "types": [
-      "nunigraph/model/NuniGraphNode.ts"
+      "webaudio2/GraphQueries.ts"
     ]
   },
   "webaudio2/VolumeNodeContainer.ts": {
@@ -1173,7 +1174,7 @@
       "dispatch/commands/types/ExecuteCommandCommandParameters.ts"
     ]
   },
-  "webaudio2/node-commands/getSetNodeValueCommand.ts": {
+  "webaudio2/node-commands/getSetAudioNodeValueCommand.ts": {
     "value": [
       "dispatch/CommandType.ts",
       "webaudio2/node-commands/expandNodePath.ts"
@@ -1235,7 +1236,7 @@
       "webaudio2/nodes/AudioNodeMap.ts"
     ],
     "types": [
-      "nunigraph/model/NuniGraphNode.ts"
+      "webaudio2/GraphQueries.ts"
     ]
   },
   "webaudio2/nodes/gate-sequencer/GateSequencer.ts": {
@@ -1317,7 +1318,6 @@
   },
   "webaudio2/nodes/midi-output-node/MIDIOutputNode.ts": {
     "value": [
-      "nunigraph/controller/graph-operations/getDisconnectPortCommands.ts",
       "webaudio2/node-commands/getAudioNodeMethodCallCommand.ts",
       "dispatch/CommandType.ts",
       "dispatch/dispatcher.ts",
@@ -1380,7 +1380,6 @@
     "value": [
       "ui-library/components/value-setters/createSelectionPrompt.ts",
       "webaudio2/BaseAudioNode.ts",
-      "nunigraph/controller/openGraphControllers.ts",
       "webaudio2/nodes/nuni-graph-audio-node/saveModuleRequestedEvent.ts"
     ],
     "types": [
@@ -1608,8 +1607,7 @@
   "webaudio2/nodes/visualizer-node/VisualizerNode.ts": {
     "value": [
       "webaudio2/node-commands/getCallAudioNodeFunctionCommand.ts",
-      "nunigraph/controller/graph-operations/getDisconnectPortCommands.ts",
-      "webaudio2/node-commands/getSetNodeValueCommand.ts",
+      "webaudio2/node-commands/getSetAudioNodeValueCommand.ts",
       "dispatch/CommandType.ts",
       "dispatch/dispatcher.ts",
       "webaudio2/BaseAudioNode.ts",
@@ -1651,7 +1649,9 @@
       "webaudio2/BaseAudioNode.ts",
       "webaudio2/getCommonController.ts"
     ],
-    "types": []
+    "types": [
+      "webaudio2/NodeContext.ts"
+    ]
   },
   "webaudio2/sample-refs/SampleRefState.ts": {
     "value": [],
@@ -1733,8 +1733,7 @@
       "webaudio2/ui-bindings/createToggleButtonWithSave.ts",
       "webaudio2/scheduling-core/MasterClock.ts",
       "webaudio2/node-commands/getCallAudioNodeFunctionCommand.ts",
-      "nunigraph/controller/graph-operations/getDisconnectPortCommands.ts",
-      "webaudio2/node-commands/getSetNodeValueCommand.ts",
+      "webaudio2/node-commands/getSetAudioNodeValueCommand.ts",
       "dispatch/CommandType.ts",
       "dispatch/dispatcher.ts",
       "webaudio2/node-commands/getAudioNodeMethodCallCommand.ts",

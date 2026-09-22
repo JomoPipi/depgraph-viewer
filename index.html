@@ -289,6 +289,37 @@
       .hud-section button {
         text-align: left;
       }
+      #hud h1 {
+        /* color: red; */
+        font-feature-settings: "dtls";
+      }
+      .title-character {
+        display: inline-block;
+        animation: twist 0.5s alternate linear infinite;
+      }
+      .title-character2 {
+        display: inline-block;
+        animation: twist2 0.5s alternate linear infinite;
+      }
+      .space {
+        min-width: 0.25rem;
+      }
+      @keyframes twist {
+        from {
+          transform: rotate(-15deg);
+        }
+        to {
+          transform: rotate(15deg);
+        }
+      }
+      @keyframes twist2 {
+        to {
+          transform: rotate(-15deg);
+        }
+        from {
+          transform: rotate(15deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -297,7 +328,7 @@
       <div id="error"></div>
       <svg id="canvas"></svg>
       <div id="hud" style="display: none">
-        <h1>Dependency Graph</h1>
+        <h1 id="title">Dependency Graph</h1>
         <div class="row">
           <span>Visible nodes</span><span id="stat-nodes">0</span>
         </div>
@@ -376,6 +407,28 @@
     <script>
       (function () {
         "use strict";
+
+        {
+          const container = document.getElementById("title");
+          const title = container.textContent;
+          container.innerHTML = "";
+          let afterSpace = false;
+          let x = 0;
+          for (const char of title) {
+            const c = document.createElement("div");
+            if (++x % 2 === 0) {
+              c.classList.add("title-character2");
+            } else {
+              c.classList.add("title-character");
+            }
+            if (char === " ") {
+              c.classList.add("space");
+              afterSpace = true;
+            }
+            c.textContent = char;
+            container.appendChild(c);
+          }
+        }
 
         // ---------------------------------------------------------------
         // 1. Load data & build a folder/file tree from flat path -> [deps]
